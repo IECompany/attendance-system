@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+
+  
+<script>
+  function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  async function submitAttendance() {
+    const file = document.getElementById('photoInput').files[0];
+    if (!file) return alert("Please select a photo");
+
+    const base64Image = await convertToBase64(file);
+
+    const payload = {
+      photos: [{ base64: base64Image }],
+      // Add other fields here if needed
+    };
+
+    const response = await fetch('http://localhost:5000/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+    alert(result.message || "Submitted!");
+  }
+</script>
+</html>

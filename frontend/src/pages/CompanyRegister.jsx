@@ -1,19 +1,18 @@
-// frontend/src/pages/CompanyRegister.jsx - FIXED: Admin password field name for backend
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Message from '../components/Message';
+import { FaBuilding, FaUserTie, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 const CompanyRegister = () => {
   const [formData, setFormData] = useState({
     companyName: '',
     companyAddress: '',
-    companyContactNo: '', // This will map to 'contactNo' in backend
-    totalEmployees: '',   // <-- NEW: Added for totalEmployees
+    companyContactNo: '',
+    totalEmployees: '',
     adminName: '',
-    adminEmail: '',       // This will map to 'superAdminEmail' in backend
-    adminPassword: '',    // This holds the password entered in the form
+    adminEmail: '',
+    adminPassword: '',
     confirmPassword: '',
   });
 
@@ -25,7 +24,7 @@ const CompanyRegister = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ // Use functional update for safety
+    setFormData(prev => ({
       ...prev,
       [name]: name === 'totalEmployees' ? parseInt(value) || '' : value
     }));
@@ -42,16 +41,15 @@ const CompanyRegister = () => {
       return;
     }
 
-    // Basic validation for new fields
     if (!formData.totalEmployees || isNaN(formData.totalEmployees) || formData.totalEmployees <= 0) {
-        setMessage({ type: 'error', text: 'Total Employees must be a positive number.' });
-        setLoading(false);
-        return;
+      setMessage({ type: 'error', text: 'Total Employees must be a positive number.' });
+      setLoading(false);
+      return;
     }
     if (!formData.companyContactNo) {
-        setMessage({ type: 'error', text: 'Company Contact Number is required.' });
-        setLoading(false);
-        return;
+      setMessage({ type: 'error', text: 'Company Contact Number is required.' });
+      setLoading(false);
+      return;
     }
 
     try {
@@ -62,7 +60,7 @@ const CompanyRegister = () => {
         totalEmployees: formData.totalEmployees,
         superAdminName: formData.adminName,
         superAdminEmail: formData.adminEmail,
-        adminPassword: formData.adminPassword, // <-- FIXED: Changed from 'superAdminPassword' to 'adminPassword'
+        adminPassword: formData.adminPassword,
       });
 
       setMessage({ type: 'success', text: response.data.message || 'Company and Super Admin registered successfully!' });
@@ -83,180 +81,257 @@ const CompanyRegister = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>Register Your Company</h2>
-      {message && <Message type={message.type} text={message.text} />}
-      <form onSubmit={handleSubmit} style={styles.form}>
-        {/* Company Details */}
-        <h3 style={styles.subHeading}>Company Information</h3>
-        <div style={styles.formGroup}>
-          <label htmlFor="companyName" style={styles.label}>Company Name:</label>
-          <input
-            type="text"
-            id="companyName"
-            name="companyName"
-            value={formData.companyName}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="companyAddress" style={styles.label}>Company Address:</label>
-          <input
-            type="text"
-            id="companyAddress"
-            name="companyAddress"
-            value={formData.companyAddress}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="companyContactNo" style={styles.label}>Company Contact No.:</label>
-          <input
-            type="text"
-            id="companyContactNo"
-            name="companyContactNo"
-            value={formData.companyContactNo}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="totalEmployees" style={styles.label}>Total Number of Employees:</label>
-          <input
-            type="number" // Use type="number" for numerical input
-            id="totalEmployees"
-            name="totalEmployees"
-            value={formData.totalEmployees}
-            onChange={handleChange}
-            required
-            min="1" // Ensure at least 1 employee
-            style={styles.input}
-          />
-        </div>
+    <>
+      <style jsx="true">{`
+        :root {
+          --ui-orange: #FF8F00;
+          --ui-turquoise: #00796B;
+          --ui-white: #FAFAFA;
+          --ui-dark: #333;
+          --ui-gray: #6c757d;
+          --ui-light-gray: #f8f9fa;
+          --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+          --transition-speed: 0.3s;
+        }
+        
+        body {
+          background-color: var(--ui-white);
+          font-family: 'Poppins', sans-serif;
+          color: var(--ui-dark);
+        }
 
-        {/* Super Admin Details */}
-        <h3 style={styles.subHeading}>Super Admin Information</h3>
-        <div style={styles.formGroup}>
-          <label htmlFor="adminName" style={styles.label}>Admin Name:</label>
-          <input
-            type="text"
-            id="adminName"
-            name="adminName"
-            value={formData.adminName}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="adminEmail" style={styles.label}>Admin Email:</label>
-          <input
-            type="email"
-            id="adminEmail"
-            name="adminEmail"
-            value={formData.adminEmail}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="adminPassword" style={styles.label}>Password:</label>
-          <input
-            type="password"
-            id="adminPassword"
-            name="adminPassword"
-            value={formData.adminPassword}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label htmlFor="confirmPassword" style={styles.label}>Confirm Password:</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            style={styles.input}
-          />
-        </div>
+        .register-container {
+          background-color: var(--ui-light-gray);
+          padding: 2.5rem;
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          max-width: 650px;
+          margin: 3rem auto;
+          animation: fadeIn 0.8s ease-out;
+        }
 
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? 'Registering...' : 'Register Company'}
-        </button>
-      </form>
-    </div>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .register-heading {
+          text-align: center;
+          font-weight: 700;
+          color: var(--ui-turquoise);
+          font-size: 2rem;
+          margin-bottom: 2rem;
+        }
+
+        .section-heading {
+          font-weight: 600;
+          font-size: 1.5rem;
+          color: var(--ui-dark);
+          margin-top: 2rem;
+          margin-bottom: 1.5rem;
+          border-left: 4px solid var(--ui-orange);
+          padding-left: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+          font-weight: 500;
+          color: var(--ui-gray);
+          margin-bottom: 0.5rem;
+          display: block;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+        
+        .form-control:focus {
+            border-color: var(--ui-turquoise);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+        }
+        
+        .btn-register {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--ui-turquoise);
+            color: var(--ui-white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color var(--transition-speed), transform var(--transition-speed);
+            margin-top: 1.5rem;
+        }
+
+        .btn-register:hover {
+            background-color: #005f54;
+            transform: translateY(-2px);
+        }
+
+        .btn-register:disabled {
+            background-color: #a0a0a0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message-container {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .message-container.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message-container.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+      `}</style>
+      <div className="register-container">
+        <h2 className="register-heading">Register Your Company</h2>
+        {message && (
+          <div className={`message-container ${message.type}`}>
+            {message.type === 'success' ? <FaCheckCircle /> : <FaExclamationCircle />}
+            <span>{message.text}</span>
+          </div>
+        )}
+        <form onSubmit={handleSubmit}>
+          {/* Company Details */}
+          <h3 className="section-heading">Company Information <FaBuilding className="ms-2" /></h3>
+          <div className="row">
+            <div className="col-md-6 form-group">
+              <label htmlFor="companyName" className="form-label">Company Name:</label>
+              <input
+                type="text"
+                id="companyName"
+                name="companyName"
+                value={formData.companyName}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+            <div className="col-md-6 form-group">
+              <label htmlFor="companyAddress" className="form-label">Company Address:</label>
+              <input
+                type="text"
+                id="companyAddress"
+                name="companyAddress"
+                value={formData.companyAddress}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6 form-group">
+              <label htmlFor="companyContactNo" className="form-label">Company Contact No.:</label>
+              <input
+                type="text"
+                id="companyContactNo"
+                name="companyContactNo"
+                value={formData.companyContactNo}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+            <div className="col-md-6 form-group">
+              <label htmlFor="totalEmployees" className="form-label">Total Number of Employees:</label>
+              <input
+                type="number"
+                id="totalEmployees"
+                name="totalEmployees"
+                value={formData.totalEmployees}
+                onChange={handleChange}
+                required
+                min="1"
+                className="form-control"
+              />
+            </div>
+          </div>
+
+          {/* Super Admin Details */}
+          <h3 className="section-heading">Super Admin Information <FaUserTie className="ms-2" /></h3>
+          <div className="row">
+            <div className="col-md-12 form-group">
+              <label htmlFor="adminName" className="form-label">Admin Name:</label>
+              <input
+                type="text"
+                id="adminName"
+                name="adminName"
+                value={formData.adminName}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-12 form-group">
+              <label htmlFor="adminEmail" className="form-label">Admin Email:</label>
+              <input
+                type="email"
+                id="adminEmail"
+                name="adminEmail"
+                value={formData.adminEmail}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-md-6 form-group">
+              <label htmlFor="adminPassword" className="form-label">Password:</label>
+              <input
+                type="password"
+                id="adminPassword"
+                name="adminPassword"
+                value={formData.adminPassword}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+            <div className="col-md-6 form-group">
+              <label htmlFor="confirmPassword" className="form-label">Confirm Password:</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="form-control"
+              />
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-register">
+            {loading ? 'Registering...' : 'Register Company'}
+          </button>
+        </form>
+      </div>
+    </>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '500px',
-    margin: '50px auto',
-    padding: '30px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#f9f9f9',
-  },
-  heading: {
-    textAlign: 'center',
-    color: '#333',
-    marginBottom: '25px',
-    fontSize: '28px',
-  },
-  subHeading: {
-    color: '#555',
-    borderBottom: '1px solid #eee',
-    paddingBottom: '10px',
-    marginBottom: '20px',
-    marginTop: '30px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  formGroup: {
-    marginBottom: '18px',
-  },
-  label: {
-    display: 'block',
-    marginBottom: '8px',
-    fontWeight: 'bold',
-    color: '#666',
-    fontSize: '15px',
-  },
-  input: {
-    width: '100%',
-    padding: '12px',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    fontSize: '16px',
-    boxSizing: 'border-box',
-  },
-  button: {
-    padding: '12px 20px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '18px',
-    marginTop: '25px',
-    transition: 'background-color 0.3s ease',
-  },
-  buttonHover: {
-    backgroundColor: '#0056b3',
-  },
 };
 
 export default CompanyRegister;

@@ -1,32 +1,34 @@
-// frontend/src/components/EmployeeSalaryInformation.jsx - UPDATED for Multi-Tenancy
+// frontend/src/components/EmployeeSalaryInformation.jsx - FINAL VERSION
 
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaMoneyBillAlt, FaSpinner, FaInfoCircle, FaEdit } from 'react-icons/fa';
+import { FaMoneyBillAlt, FaSpinner, FaInfoCircle, FaEdit, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
-import { toast } from 'react-toastify'; // Assuming you have react-toastify for notifications
-import Loader from './Loader'; // Assuming you have a Loader component
-import Message from './Message'; // Assuming you have a Message component
-
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+import { toast } from 'react-toastify';
+import Loader from './Loader';
+import Message from './Message';
+import { useAuth } from '../authContext';
+// NEW: Import the PDF printing hook
+import { useReactToPrint } from 'react-to-print';
+// NEW: Import the Salary Slip component (you'll need to create this file)
+import SalarySlipTemplate from './SalarySlipTemplate';
 
 const EmployeeSalaryInformation = () => {
-    const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+    const { user, token, logout } = useAuth();
 
     const [employeesSalary, setEmployeesSalary] = useState([]);
-    const [loading, setLoading] = useState(false); // For initial data fetch
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    // State for month and year selection (defaults to current month/year)
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // Current month (1-12)
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Current year
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-    // State for the Edit Salary Details Modal
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingEmployee, setEditingEmployee] = useState(null); // Stores the employee data being edited
-    const [isUpdating, setIsUpdating] = useState(false); // For update button loading state
+    const [editingEmployee, setEditingEmployee] = useState(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isUpdatingLeave, setIsUpdatingLeave] = useState(false);
+    const [newLeavesRemaining, setNewLeavesRemaining] = useState('');
 
-    // Form data for the edit modal
     const [formData, setFormData] = useState({
         salaryInHandPerMonth: '',
         fixedAllowances: '',
@@ -34,14 +36,18 @@ const EmployeeSalaryInformation = () => {
         employeeESIContribution: '',
         employerEPFContribution: '',
         employerESICContribution: '',
-        otherDeductions: [], // Array of { title, amount }
-        reimbursements: [],  // Array of { title, amount }
-        manualNetSalaryOverride: '', // Can be null or a number
+        otherDeductions: [],
+        reimbursements: [],
+        manualNetSalaryOverride: '',
         salaryDetailsConfigured: false,
         incentive: ''
     });
 
-    // Data for month and year dropdowns
+    // NEW STATE FOR PDF
+    const [selectedEmployeeForPdf, setSelectedEmployeeForPdf] = useState(null);
+    const [showPrintableComponent, setShowPrintableComponent] = useState(false);
+    const componentRef = useRef();
+    
     const months = [
         { value: 1, label: 'January' }, { value: 2, label: 'February' }, { value: 3, label: 'March' },
         { value: 4, label: 'April' }, { value: 5, label: 'May' }, { value: 6, label: 'June' },
@@ -49,39 +55,34 @@ const EmployeeSalaryInformation = () => {
         { value: 10, label: 'October' }, { value: 11, label: 'November' }, { value: 12, label: 'December' },
     ];
 
-    // Generates years from 2 years ago to 2 years in the future
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-    // --- NEW: Helper to get authenticated headers ---
     const getAuthHeaders = useCallback(() => {
         if (!token || !user || !user.companyId) {
-            // If token or companyId is missing, it means user is not properly authenticated
-            // or session is invalid. Redirect to login.
-            setError("Session expired or invalid. Please log in again."); // Set error message
-            logout(); // Use logout function from context
+            setError("Session expired or invalid. Please log in again.");
+            logout();
             return null;
         }
         return {
             'Authorization': `Bearer ${token}`,
             'X-Company-ID': user.companyId
         };
-    }, [token, user, logout]); // Dependencies for useCallback
+    }, [token, user, logout]);
 
-    // Function to fetch employee salary data from the backend
     const fetchEmployeesSalary = async (month, year) => {
-        const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
+        const headers = getAuthHeaders();
         if (!headers) {
             setLoading(false);
-            return; // Exit if headers are not available
+            return;
         }
 
         setLoading(true);
         setError(null);
         try {
             const { data } = await axios.get(`http://localhost:5001/api/admin/employees-salary-info?month=${month}&year=${year}`, {
-                headers: headers, // <-- NEW: Pass authentication headers
-                withCredentials: true, // Keep this if your backend still expects cookies for some reason, though JWT in header is primary
+                headers: headers,
+                withCredentials: true,
             });
             setEmployeesSalary(Array.isArray(data) ? data : []);
             setLoading(false);
@@ -92,17 +93,14 @@ const EmployeeSalaryInformation = () => {
         }
     };
 
-    // useEffect to call the fetch function whenever month or year changes
     useEffect(() => {
-        // Initial authentication check
         if (!user || !token || !user.companyId) {
             logout();
             return;
         }
         fetchEmployeesSalary(selectedMonth, selectedYear);
-    }, [selectedMonth, selectedYear, user, token, logout, getAuthHeaders]); // Added user, token, logout, getAuthHeaders to dependencies
+    }, [selectedMonth, selectedYear, user, token, logout, getAuthHeaders]);
 
-    // Handlers for month/year dropdowns
     const handleMonthChange = (e) => {
         setSelectedMonth(parseInt(e.target.value));
     };
@@ -111,10 +109,8 @@ const EmployeeSalaryInformation = () => {
         setSelectedYear(parseInt(e.target.value));
     };
 
-    // Function to open the edit modal and populate form data
     const openEditModal = (employee) => {
         setEditingEmployee(employee);
-        // Populate form data with existing employee details for editing
         setFormData({
             salaryInHandPerMonth: employee.salaryInHandPerMonth || '',
             fixedAllowances: employee.fixedAllowances || '',
@@ -122,38 +118,39 @@ const EmployeeSalaryInformation = () => {
             employeeESIContribution: employee.employeeESIContribution || '',
             employerEPFContribution: employee.employerEPFContribution || '',
             employerESICContribution: employee.employerESICContribution || '',
-            otherDeductions: employee.otherDeductions ? [...employee.otherDeductions] : [], // Deep copy array
-            reimbursements: employee.reimbursements ? [...employee.reimbursements] : [],   // Deep copy array
+            otherDeductions: employee.otherDeductions ? [...employee.otherDeductions] : [],
+            reimbursements: employee.reimbursements ? [...employee.reimbursements] : [],
             manualNetSalaryOverride: employee.manualNetSalaryOverride === null ? '' : employee.manualNetSalaryOverride,
             salaryDetailsConfigured: employee.salaryDetailsConfigured || false,
             incentive: employee.incentive || ''
         });
+        if (employee.leave) {
+            setNewLeavesRemaining(employee.leave.leavesRemaining.toString());
+        } else {
+            setNewLeavesRemaining('');
+        }
         setShowEditModal(true);
     };
 
-    // Function to close the edit modal and reset states
     const closeEditModal = () => {
         setShowEditModal(false);
         setEditingEmployee(null);
-        // Reset form data to initial empty states
         setFormData({
             salaryInHandPerMonth: '', fixedAllowances: '', employeePFContribution: '', employeeESIContribution: '',
             employerEPFContribution: '', employerESICContribution: '', otherDeductions: [], reimbursements: [],
             manualNetSalaryOverride: '', salaryDetailsConfigured: false, incentive: ''
         });
+        setNewLeavesRemaining('');
     };
 
-    // Universal handler for form input changes (single values)
     const handleFormChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
             ...prev,
-            // Convert to number if type is number, or keep as string/boolean
             [name]: type === 'checkbox' ? checked : (value === '' ? '' : (type === 'number' ? parseFloat(value) : value))
         }));
     };
 
-    // Handler for changes within dynamic arrays (deductions/reimbursements)
     const handleArrayChange = (type, index, field, value) => {
         setFormData(prev => {
             const newArray = [...prev[type]];
@@ -162,15 +159,13 @@ const EmployeeSalaryInformation = () => {
         });
     };
 
-    // Add new item to dynamic array
     const addArrayItem = (type) => {
         setFormData(prev => ({
             ...prev,
-            [type]: [...prev[type], { title: '', amount: 0 }] // New item structure
+            [type]: [...prev[type], { title: '', amount: 0 }]
         }));
     };
 
-    // Remove item from dynamic array
     const removeArrayItem = (type, index) => {
         setFormData(prev => ({
             ...prev,
@@ -178,19 +173,17 @@ const EmployeeSalaryInformation = () => {
         }));
     };
 
-    // Handler for submitting salary detail updates
     const handleUpdateSalaryDetails = async (e) => {
         e.preventDefault();
-        setIsUpdating(true); // Set loading for update button
+        setIsUpdating(true);
 
-        const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
+        const headers = getAuthHeaders();
         if (!headers) {
             setIsUpdating(false);
-            return; // Exit if headers are not available
+            return;
         }
 
         try {
-            // Prepare data for sending: ensure numbers are numbers, empty strings for override become null
             const dataToSend = {
                 ...formData,
                 salaryInHandPerMonth: formData.salaryInHandPerMonth === '' ? 0 : parseFloat(formData.salaryInHandPerMonth),
@@ -201,24 +194,69 @@ const EmployeeSalaryInformation = () => {
                 employerESICContribution: formData.employerESICContribution === '' ? 0 : parseFloat(formData.employerESICContribution),
                 incentive: formData.incentive === '' ? 0 : parseFloat(formData.incentive),
                 manualNetSalaryOverride: formData.manualNetSalaryOverride === '' ? null : parseFloat(formData.manualNetSalaryOverride),
-                // Ensure amount fields in arrays are numbers
                 otherDeductions: formData.otherDeductions.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
                 reimbursements: formData.reimbursements.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
             };
 
             await axios.put(`http://localhost:5001/api/admin/employees-salary-info/${editingEmployee._id}`, dataToSend, {
-                headers: headers, // <-- NEW: Pass authentication headers
+                headers: headers,
                 withCredentials: true,
             });
             toast.success('Salary details updated successfully!');
             closeEditModal();
-            fetchEmployeesSalary(selectedMonth, selectedYear); // Refresh data after update
+            fetchEmployeesSalary(selectedMonth, selectedYear);
         } catch (err) {
             console.error("Error updating salary details:", err.response?.data?.message || err.message);
             toast.error(err.response?.data?.message || err.message || "Failed to update salary details.");
         } finally {
-            setIsUpdating(false); // Reset loading state
+            setIsUpdating(false);
         }
+    };
+
+    const handleLeaveUpdate = async () => {
+        if (!editingEmployee || newLeavesRemaining === '' || isNaN(newLeavesRemaining) || parseInt(newLeavesRemaining) < 0) {
+            return toast.error("Please enter a valid number for remaining leaves.");
+        }
+        setIsUpdatingLeave(true);
+        const headers = getAuthHeaders();
+        if (!headers) {
+            setIsUpdatingLeave(false);
+            return;
+        }
+
+        try {
+            const response = await axios.put(`http://localhost:5001/api/admin/salaries/update-leave/${editingEmployee.user._id}`, { leavesRemaining: parseInt(newLeavesRemaining) }, { headers });
+            toast.success(response.data.message);
+            setEmployeesSalary(prev => prev.map(emp => 
+                emp._id === editingEmployee._id 
+                ? { ...emp, leave: response.data.leave } 
+                : emp
+            ));
+            setEditingEmployee(prev => ({ ...prev, leave: response.data.leave }));
+        } catch (err) {
+            console.error("Error updating leaves:", err.response?.data?.message || err.message);
+            toast.error(err.response?.data?.message || err.message || "Failed to update leaves.");
+        } finally {
+            setIsUpdatingLeave(false);
+        }
+    };
+    
+    // NEW: PDF Printing Logic
+    const handlePrint = useReactToPrint({
+        content: () => componentRef.current,
+        documentTitle: `Salary_Slip_${selectedEmployeeForPdf?.pacsId}_${months[selectedMonth - 1]?.label}_${selectedYear}`,
+    });
+
+    // UPDATED generatePdf function
+    const generatePdf = (employee) => {
+        setSelectedEmployeeForPdf(employee);
+        setShowPrintableComponent(true); // Component render karna shuru karo
+
+        setTimeout(() => {
+            handlePrint().then(() => {
+                setShowPrintableComponent(false); // Print hone ke baad component ko hata do
+            });
+        }, 100);
     };
 
     return (
@@ -232,7 +270,6 @@ const EmployeeSalaryInformation = () => {
         >
             <div className="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
                 <span><FaMoneyBillAlt className="me-2" /> Employee Salary Information</span>
-                {/* Month and Year Selectors */}
                 <div className="d-flex align-items-center">
                     <label htmlFor="monthSelect" className="me-2 mb-0">Month:</label>
                     <select id="monthSelect" className="form-select form-select-sm me-3" value={selectedMonth} onChange={handleMonthChange}>
@@ -278,6 +315,7 @@ const EmployeeSalaryInformation = () => {
                                     <th>Emp. PF/ESI Deductions</th>
                                     <th>Other Deductions</th>
                                     <th>Reimbursements</th>
+                                    <th>Leaves Remaining</th>
                                     <th>Net Salary</th>
                                     <th>CTC (Calculated)</th>
                                     <th>Actions</th>
@@ -320,6 +358,9 @@ const EmployeeSalaryInformation = () => {
                                                 </ul>
                                             ) : 'N/A'}
                                         </td>
+                                        <td className="fw-bold text-info">
+                                            {employee.leave?.leavesRemaining ?? 'N/A'}
+                                        </td>
                                         <td className={employee.manualNetSalaryOverride !== null ? 'fw-bold text-primary' : ''}>
                                             ₹{employee.calculated.netSalary.toFixed(2)}
                                             {employee.manualNetSalaryOverride !== null && (
@@ -330,9 +371,15 @@ const EmployeeSalaryInformation = () => {
                                         </td>
                                         <td>₹{employee.calculated.calculatedCtc.toFixed(2)}</td>
                                         <td>
-                                            <button className="btn btn-sm btn-info" onClick={() => openEditModal(employee)}>
-                                                <FaEdit /> Edit
-                                            </button>
+                                            <div className="d-flex flex-column gap-1">
+                                                <button className="btn btn-sm btn-info" onClick={() => openEditModal(employee)}>
+                                                    <FaEdit /> Edit
+                                                </button>
+                                                {/* NEW: PDF Download Button */}
+                                                <button className="btn btn-sm btn-danger mt-1" onClick={() => generatePdf(employee)}>
+                                                    <FaFilePdf /> PDF
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -342,13 +389,24 @@ const EmployeeSalaryInformation = () => {
                 )}
             </div>
 
-            {/* Edit Salary Modal */}
+            {/* UPDATED: Conditional Rendering for PDF Component */}
+            {showPrintableComponent && (
+                <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+                    <SalarySlipTemplate 
+                        ref={componentRef} 
+                        employeeData={selectedEmployeeForPdf} 
+                        month={months[selectedMonth - 1]?.label} 
+                        year={selectedYear} 
+                    />
+                </div>
+            )}
+
             {showEditModal && editingEmployee && (
                 <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1" role="dialog">
                     <div className="modal-dialog modal-lg" role="document">
                         <div className="modal-content">
                             <div className="modal-header bg-primary text-white">
-                                <h5 className="modal-title">Edit Salary Details for {editingEmployee.name} ({editingEmployee.pacsId})</h5>
+                                <h5 className="modal-title">Edit Details for {editingEmployee.name} ({editingEmployee.pacsId})</h5>
                                 <button type="button" className="btn-close btn-close-white" aria-label="Close" onClick={closeEditModal}></button>
                             </div>
                             <form onSubmit={handleUpdateSalaryDetails}>
@@ -403,7 +461,6 @@ const EmployeeSalaryInformation = () => {
                                         </div>
                                     </div>
 
-                                    {/* Other Deductions */}
                                     <div className="mb-3 border p-3 rounded bg-light">
                                         <h6 className="d-flex justify-content-between align-items-center">
                                             Other Deductions
@@ -425,7 +482,6 @@ const EmployeeSalaryInformation = () => {
                                         {formData.otherDeductions.length === 0 && <p className="text-muted small">No custom deductions added.</p>}
                                     </div>
 
-                                    {/* Reimbursements */}
                                     <div className="mb-3 border p-3 rounded bg-light">
                                         <h6 className="d-flex justify-content-between align-items-center">
                                             Reimbursements
@@ -447,6 +503,36 @@ const EmployeeSalaryInformation = () => {
                                         {formData.reimbursements.length === 0 && <p className="text-muted small">No reimbursements added.</p>}
                                     </div>
 
+                                    <div className="mb-3 border p-3 rounded bg-light">
+                                        <h6 className="d-flex justify-content-between align-items-center">
+                                            Update Remaining Leaves
+                                        </h6>
+                                        <div className="row align-items-center">
+                                            <div className="col-6">
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    placeholder="Enter leaves remaining"
+                                                    value={newLeavesRemaining}
+                                                    onChange={(e) => setNewLeavesRemaining(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="col-6">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-success w-100"
+                                                    onClick={handleLeaveUpdate}
+                                                    disabled={isUpdatingLeave}
+                                                >
+                                                    {isUpdatingLeave ? (
+                                                        <>
+                                                            <FaSpinner className="me-2" /> Updating...
+                                                        </>
+                                                    ) : 'Update Leaves'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-secondary" onClick={closeEditModal}>Close</button>

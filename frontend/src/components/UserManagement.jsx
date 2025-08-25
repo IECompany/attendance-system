@@ -1,14 +1,14 @@
 // src/components/UserManagement.jsx - UPDATED for Multi-Tenancy
 
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Table, Form, Button, Spinner, Alert, Pagination } from 'react-bootstrap';
 import { FaSearch, FaTrash, FaUsers } from 'react-icons/fa';
 
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+import { useAuth } from '../authContext';
 
 const UserManagement = () => {
-    const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+    const { user, token, logout } = useAuth();
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,35 +20,32 @@ const UserManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(false);
 
-    const API_BASE_URL = 'http://localhost:5001/api/admin'; 
+    const API_BASE_URL = 'http://localhost:5001/api/admin';
 
-    // --- NEW: Helper to get authenticated headers ---
+    // Helper to get authenticated headers
     const getAuthHeaders = useCallback(() => {
         if (!token || !user || !user.companyId) {
-            // If token or companyId is missing, it means user is not properly authenticated
-            // or session is invalid. Redirect to login.
-            setError("Session expired or invalid. Please log in again."); // Set error message
-            logout(); // Use logout function from context
+            setError("Session expired or invalid. Please log in again.");
+            logout();
             return null;
         }
         return {
             'Authorization': `Bearer ${token}`,
             'X-Company-ID': user.companyId
         };
-    }, [token, user, logout]); // Dependencies for useCallback
+    }, [token, user, logout]);
 
     useEffect(() => {
-        // Initial authentication check
         if (!user || !token || !user.companyId) {
-            setLoading(false); // Stop loading if not authenticated
+            setLoading(false);
             return;
         }
 
         const fetchUsers = async () => {
-            const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
+            const headers = getAuthHeaders();
             if (!headers) {
                 setLoading(false);
-                return; // Exit if headers are not available
+                return;
             }
 
             setLoading(true);
@@ -60,7 +57,7 @@ const UserManagement = () => {
                         limit,
                         search: searchTerm
                     },
-                    headers: headers // <-- NEW: Pass authentication headers
+                    headers: headers
                 });
                 setUsers(response.data.users);
                 setTotalPages(response.data.totalPages);
@@ -74,19 +71,19 @@ const UserManagement = () => {
         };
 
         fetchUsers();
-    }, [page, limit, searchTerm, refreshTrigger, user, token, logout, getAuthHeaders]); // Added user, token, logout, getAuthHeaders to dependencies
+    }, [page, limit, searchTerm, refreshTrigger, user, token, logout, getAuthHeaders]);
 
     const handleDeleteUser = async (userId, userName) => {
         if (window.confirm(`Are you sure you want to delete user "${userName}" (ID: ${userId})? This action cannot be undone.`)) {
-            const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-            if (!headers) return; // Exit if headers are not available
+            const headers = getAuthHeaders();
+            if (!headers) return;
 
             try {
                 setLoading(true);
                 await axios.delete(`${API_BASE_URL}/users/${userId}`, {
-                    headers: headers // <-- NEW: Pass authentication headers
+                    headers: headers
                 });
-                setRefreshTrigger(prev => !prev); 
+                setRefreshTrigger(prev => !prev);
                 alert(`User "${userName}" deleted successfully!`);
             } catch (err) {
                 console.error("Failed to delete user:", err);
@@ -97,24 +94,26 @@ const UserManagement = () => {
         }
     };
 
-    // Helper function to generate password from DOB string (e.g., "10-May-1985")
-    const generatePasswordFromDOBString = (dobString) => {
-        if (!dobString || typeof dobString !== 'string') {
-            return 'N/A'; // Or a default message
+    // ✅ Helper function to generate password from name and DOB string
+    const generatePasswordFromNameAndDOB = (name, dobString) => {
+        if (!name || !dobString || typeof name !== 'string' || typeof dobString !== 'string') {
+            return 'N/A';
         }
         try {
-            const parts = dobString.split('-'); // Expected format: DD-Mon-YYYY
+            // Your backend expects DD/MM/YYYY format
+            const parts = dobString.split('/');
             if (parts.length === 3) {
-                const month = parts[1]; // "May"
-                const year = parts[2]; // "1985"
-                return `${month}@${year}`;
+                const month = parts[1];
+                const year = parts[2];
+                const cleanedName = name.trim().toLowerCase().replace(/\s+/g, "");
+                return `${cleanedName}@${month}${year}`;
             }
         } catch (error) {
-            console.error("Error generating password from DOB string:", dobString, error);
+            console.error("Error generating password:", error);
         }
-        return 'Invalid DOB Format'; // Fallback
+        return 'Invalid Format';
     };
-    
+
     // Pagination render logic
     let items = [];
     for (let number = 1; number <= totalPages; number++) {
@@ -194,14 +193,14 @@ const UserManagement = () => {
                             <tbody>
                                 {users.map((user) => (
                                     <tr key={user._id}>
-                                        <td>{user.pacsId}</td>
+                                        <td>{user.employeeId}</td>
                                         <td>{user.name}</td>
                                         <td>{user.email}</td>
                                         <td>
                                             {user.dateOfBirth || 'N/A'}
                                         </td>
                                         <td>
-                                            {generatePasswordFromDOBString(user.dateOfBirth)}
+                                            {generatePasswordFromNameAndDOB(user.name, user.dateOfBirth)}
                                         </td>
                                         <td>{user.contactNo || 'N/A'}</td>
                                         <td>{user.userType}</td>

@@ -10,12 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@chakra-ui/react": "^3.25.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "axios": "^1.11.0",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
     "browser-image-compression": "^2.0.2",
     "file-saver": "^2.0.5",
-    "framer-motion": "^12.23.7",
+    "framer-motion": "^12.23.12",
     "imagekitio-react": "^4.3.0",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
@@ -26,6 +29,7 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.6.0",
     "react-select": "^5.10.1",
+    "react-to-print": "^3.1.1",
     "react-toastify": "^11.0.5",
     "xlsx": "^0.18.5"
   },

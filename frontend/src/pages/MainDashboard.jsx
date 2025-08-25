@@ -1,14 +1,15 @@
-// frontend/src/pages/MainDashboard.jsx - UPDATED for Multi-Tenancy
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import SubmissionTable from "../components/SubmissionTable"; // Ensure this path is correct
-import { FaCamera } from "react-icons/fa";
+import { FaCamera, FaSignInAlt, FaCheckCircle, FaExclamationCircle, FaFingerprint } from "react-icons/fa";
+import { FaBuilding, FaMapMarkerAlt, FaFileAlt } from 'react-icons/fa';
 import imageCompression from "browser-image-compression";
-import Select from "react-select"; // Import react-select
-import UserVisitsTable from '../components/UserVisitsTable'; // Assuming this is used elsewhere or will be updated
+import Select from "react-select";
+import { useAuth } from '../authContext';
+import Message from '../components/Message';
+import SubmissionTable from "../components/SubmissionTable";
 
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+// API Base URL
+const API_BASE_URL = "http://localhost:5001/api";
 
 // Define invalidLocations here, outside of any function scope
 const INVALID_LOCATIONS = [
@@ -18,66 +19,59 @@ const INVALID_LOCATIONS = [
 ];
 
 const MainDashboard = () => {
-  const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+  const { user, token, logout } = useAuth();
 
+  // --- UI/Loading States ---
   const [showAttendancePanel, setShowAttendancePanel] = useState(false);
   const [showCheckinCheckoutSelection, setShowCheckinCheckoutSelection] = useState(false);
-  const [isCheckin, setIsCheckin] = useState(true); // Default to Check-in for initial form display logic
+  const [isCheckin, setIsCheckin] = useState(true);
+  const [viewAttendance, setViewAttendance] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [fetchingOccupations, setFetchingOccupations] = useState(false);
+  const [fetchingOffices, setFetchingOffices] = useState(false);
+  const [fetchingStates, setFetchingStates] = useState(false);
 
-  // --- Photos and Camera State ---
+  // --- User/Greeting States ---
+  const [greeting, setGreeting] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userERPId, setUserERPId] = useState("");
+
+  // --- Form Data States ---
   const [photos, setPhotos] = useState([]);
   const [currentLabelIndex, setCurrentLabelIndex] = useState(0);
   const [cameraFacingMode, setCameraFacingMode] = useState("environment");
-  const videoRef = useRef(null); 
+  const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Dynamic REQUIRED_PHOTOS based on occupation
   const [requiredPhotosCheckin, setRequiredPhotosCheckin] = useState(["Your Front Photo"]);
-  // Dynamic REQUIRED_PHOTOS for Checkout
   const [requiredPhotosCheckout, setRequiredPhotosCheckout] = useState(["Your Front Photo"]);
 
-  // --- Location State ---
   const [location, setLocation] = useState({ lat: null, lon: null });
   const [locationName, setLocationName] = useState("Fetching location...");
 
-  // --- Form Data States ---
-  const [selectedOffice, setSelectedOffice] = useState(null); 
+  const [selectedOffice, setSelectedOffice] = useState(null);
   const [officeOptions, setOfficeOptions] = useState([]);
-  const [selectedState, setSelectedState] = useState(null); 
-  const [stateOptions, setStateOptions] = useState([]); 
-  const [occupation, setOccupation] = useState(""); 
-  const [occupationOptions, setOccupationOptions] = useState([]); 
-  // Bike Meter Reading State
+  const [selectedState, setSelectedState] = useState(null);
+  const [stateOptions, setStateOptions] = useState([]);
+  const [occupation, setOccupation] = useState("");
+  const [occupationOptions, setOccupationOptions] = useState([]);
   const [bikeMeterReadingCheckin, setBikeMeterReadingCheckin] = useState("");
   const [bikeMeterReadingCheckout, setBikeMeterReadingCheckout] = useState("");
-  // Flag to remember if check-in was for SE with meter (for conditional checkout)
   const [checkedInAsSEWithMeter, setCheckedInAsSEWithMeter] = useState(false);
-
-  // --- UI/Loading States ---
-  const [viewAttendance, setViewAttendance] = useState(false);
-  const [greeting, setGreeting] = useState("");
-  const [bgColor, setBgColor] = useState("#e3f2fd");
-  const [userName, setUserName] = useState("");
-  const [loading, setLoading] = useState(false); 
-  const [fetchingOccupations, setFetchingOccupations] = useState(false); 
-  const [fetchingOffices, setFetchingOffices] = useState(false); 
-  const [fetchingStates, setFetchingStates] = useState(false); 
 
   // --- NEW: Helper to get authenticated headers ---
   const getAuthHeaders = useCallback(() => {
     if (!token || !user || !user.companyId) {
-      // If token or companyId is missing, it means user is not properly authenticated
-      // or session is invalid. Redirect to login.
-      alert("Session expired or invalid. Please log in again.");
-      logout(); // Use logout function from context
+      setMessage({ type: 'error', text: 'Session expired or invalid. Please log in again.' });
+      logout();
       return null;
     }
     return {
       'Authorization': `Bearer ${token}`,
       'X-Company-ID': user.companyId
     };
-  }, [token, user, logout]); // Dependencies for useCallback
-
+  }, [token, user, logout]);
 
   // Utility function to convert Data URL to Blob for FormData
   function dataURLtoBlob(dataurl) {
@@ -86,7 +80,6 @@ const MainDashboard = () => {
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
@@ -95,325 +88,118 @@ const MainDashboard = () => {
 
   // --- Initial Setup and Effects ---
   useEffect(() => {
-    // Check if user is authenticated via context. If not, redirect.
     if (!user || !token || !user.companyId) {
-      logout(); // Redirect to login
+      logout();
       return;
     }
 
-    const storedUserName = localStorage.getItem("userName");
-    if (storedUserName) setUserName(storedUserName);
+    setUserName(user.name || "User");
+    setUserERPId(user.email || user.erpId || "N/A");
 
-    // Load checkedInAsSEWithMeter flag from localStorage
     const storedSEFlag = localStorage.getItem("checkedInAsSEWithMeter");
-    if (storedSEFlag === "true") {
-      setCheckedInAsSEWithMeter(true);
-    } else {
-      setCheckedInSEWithMeter(false); // Ensure it's false if not explicitly true
-    }
+    setCheckedInAsSEWithMeter(storedSEFlag === "true");
 
     const hour = new Date().getHours();
     setGreeting(
       hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening"
     );
-    setBgColor("#e3f2fd");
 
     captureLocation();
-  }, [user, token, logout]); // Add user and token to dependencies
-
+  }, [user, token, logout]);
 
   // EFFECT: Fetch occupations when component mounts
   useEffect(() => {
     const fetchOccupations = async () => {
-      const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-      if (!headers) return; // Exit if headers are not available
-
+      const headers = getAuthHeaders();
+      if (!headers) return;
       setFetchingOccupations(true);
       try {
-        const response = await fetch("http://localhost:5001/api/occupations", { headers }); // <-- NEW: Pass headers
-        if (!response.ok) {
-          throw new Error("Failed to fetch occupations");
-        }
+        const response = await fetch(`${API_BASE_URL}/occupations`, { headers });
+        if (!response.ok) throw new Error("Failed to fetch occupations");
         const data = await response.json();
-        setOccupationOptions(data.map(occ => ({ value: occ.name, label: occ.name }))); // Assuming backend now sends objects { _id, name, companyId }
+        setOccupationOptions(data.map(occ => ({ value: occ, label: occ })));
       } catch (error) {
         console.error("Error fetching occupations:", error);
-        alert("Failed to load occupation options. Please check server.");
+        setMessage({ type: 'error', text: 'Failed to load occupations.' });
       } finally {
         setFetchingOccupations(false);
       }
     };
     fetchOccupations();
-  }, [getAuthHeaders]); // Re-run when auth headers might change
+  }, [getAuthHeaders]);
 
   // EFFECT: Fetch states when component mounts
   useEffect(() => {
     const fetchStates = async () => {
-      const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-      if (!headers) return; // Exit if headers are not available
-
+      const headers = getAuthHeaders();
+      if (!headers) return;
       setFetchingStates(true);
       try {
-        const response = await fetch("http://localhost:5001/api/states", { headers }); // <-- NEW: Pass headers
-        if (!response.ok) {
-          throw new Error("Failed to fetch states");
-        }
+        const response = await fetch(`${API_BASE_URL}/states`, { headers });
+        if (!response.ok) throw new Error("Failed to fetch states");
         const data = await response.json();
-        // Assuming data is an array of strings like ["Uttar Pradesh", "Chhattisgarh"]
         setStateOptions(data.map(stateName => ({ value: stateName, label: stateName })));
       } catch (error) {
         console.error("Error fetching states:", error);
-        alert("Failed to load state options. Please check server.");
+        setMessage({ type: 'error', text: 'Failed to load states.' });
       } finally {
         setFetchingStates(false);
       }
     };
     fetchStates();
-  }, [getAuthHeaders]); // Re-run when auth headers might change
+  }, [getAuthHeaders]);
 
-
-  // EFFECT: Adjust REQUIRED_PHOTOS for Check-in based on occupation
+  // EFFECT: Adjust REQUIRED_PHOTOS for Check-in based on bikeMeterReadingCheckin
   useEffect(() => {
-    if (occupation === "SE") {
-      setRequiredPhotosCheckin([
-        "Your Front Photo",
-        "Capture your bike meter photo"
-      ]);
-    } else {
-      setRequiredPhotosCheckin(["Your Front Photo"]);
+    const newRequiredPhotos = ["Your Front Photo"];
+    if (bikeMeterReadingCheckin) {
+      newRequiredPhotos.push("Capture your bike meter photo");
     }
-  }, [occupation]);
+    setRequiredPhotosCheckin(newRequiredPhotos);
+  }, [bikeMeterReadingCheckin]);
 
   // EFFECT: Adjust REQUIRED_PHOTOS for Checkout based on checkedInAsSEWithMeter
   useEffect(() => {
+    const newRequiredPhotos = ["Your Front Photo"];
     if (checkedInAsSEWithMeter) {
-      setRequiredPhotosCheckout([
-        "Your Front Photo",
-        "Your bike riding meter"
-      ]);
-    } else {
-      setRequiredPhotosCheckout(["Your Front Photo"]);
+      newRequiredPhotos.push("Your bike riding meter");
     }
+    setRequiredPhotosCheckout(newRequiredPhotos);
   }, [checkedInAsSEWithMeter]);
-
 
   // EFFECT: Fetch offices when selectedState changes
   useEffect(() => {
     const fetchOffices = async () => {
-      // Clear offices and selected office if no state is selected
       if (!selectedState) {
         setOfficeOptions([]);
         setSelectedOffice(null);
         return;
       }
-
-      const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-      if (!headers) return; // Exit if headers are not available
-
+      const headers = getAuthHeaders();
+      if (!headers) return;
       setFetchingOffices(true);
       try {
-        // Use the new dedicated route for offices with state filter
-        const response = await fetch(`http://localhost:5001/api/offices?state=${encodeURIComponent(selectedState.value)}`, { headers }); // <-- NEW: Pass headers
-        if (!response.ok) {
-          throw new Error("Failed to fetch offices");
-        }
+        const response = await fetch(`${API_BASE_URL}/offices?state=${encodeURIComponent(selectedState.value)}`, { headers });
+        if (!response.ok) throw new Error("Failed to fetch offices");
         const data = await response.json();
-        // Map data to react-select format: { value: office.name, label: office.name }
-        setOfficeOptions(data.map(office => ({ value: office.name, label: office.name, district: office.district }))); // Assuming district might be part of office object
+        setOfficeOptions(data.map(office => ({ value: office.name, label: office.name, district: office.district })));
       } catch (error) {
         console.error("Error fetching offices:", error);
-        setOfficeOptions([]); // Clear options on error
-        alert("Failed to load offices for the selected state. Please check server.");
+        setOfficeOptions([]);
+        setMessage({ type: 'error', text: 'Failed to load offices.' });
       } finally {
         setFetchingOffices(false);
       }
     };
-
     fetchOffices();
-  }, [selectedState, getAuthHeaders]); // Re-fetch offices when selectedState or auth headers change
+  }, [selectedState, getAuthHeaders]);
 
   const captureLocation = () => {
     if (!navigator.geolocation) {
       setLocationName("Geolocation not supported by browser.");
-      alert("Your browser does not support location services.");
+      setMessage({ type: 'error', text: 'Your browser does not support location services.' });
       return;
     }
-
-    setLocationName("Fetching location...");
-    setLocation({ lat: null, lon: null }); // Clear previous location
-
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords }) => {
-        const { latitude, longitude } = coords;
-        setLocation({ lat: latitude, lon: longitude });
-
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-
-          if (!res.ok) throw new Error("Reverse geocoding failed");
-
-          const data = await res.json();
-          const address = data.display_name || "Unknown Location";
-          setLocationName(address);
-        } catch (err) {
-          console.error("❌ Reverse geocoding error:", err);
-          setLocationName("Unknown Location");
-          alert("Unable to determine address from coordinates.");
-        }
-      },
-      (error) => {
-        console.error("❌ Geolocation error:", error);
-        if (error.code === 1) {
-          alert("Permission denied. Please allow location access.");
-        } else if (error.code === 2) {
-          alert("Position unavailable. Try again later.");
-        } else if (error.code === 3) {
-          alert("Location request timed out. Please try again.");
-        } else {
-          alert("An unknown error occurred while fetching location.");
-        }
-        setLocationName("Location not available");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  };
-
-  // --- Main Navigation Handlers ---
-  const handleShowAttendance = () => {
-    setShowCheckinCheckoutSelection(true); // Show the Check-in/Check-out options
-    setShowAttendancePanel(false); // Hide the main attendance panel initially
-    setViewAttendance(false);
-  };
-
-  // --- Check-in Specific Handlers ---
-  const handleCheckinClick = () => {
-    setIsCheckin(true); // Set mode to Check-in
-    setShowCheckinCheckoutSelection(false); // Hide selection buttons
-    setShowAttendancePanel(true); // Show the Check-in form
-    setPhotos([]); // Clear photos for a new session
-    setCurrentLabelIndex(0); // Reset photo index
-    setSelectedOffice(null); // Clear selected office
-    setSelectedState(null); // Clear selected state
-    setOccupation(""); // Clear selected occupation
-    setBikeMeterReadingCheckin(""); // Clear bike meter reading
-    setLocationName("Fetching location..."); // Reset location status
-    setLocation({ lat: null, lon: null }); // Clear location
-    captureLocation(); // Capture location when starting check-in (re-calling for explicit check-in)
-  };
-
-  // This function now handles opening camera, capturing, and closing it immediately for Check-in
-  const capturePhoto = useCallback(async () => {
-    if (INVALID_LOCATIONS.includes(locationName) || !location.lat || !location.lon) {
-      alert("Location is not available. Please click 'Refetch Location'.");
-      return;
-    }
-    const requiredPhotos = isCheckin ? requiredPhotosCheckin : requiredPhotosCheckout; // Determine based on current mode
-    if (currentLabelIndex >= requiredPhotos.length) {
-      alert("All required photos have already been captured.");
-      return;
-    }
-
-    setLoading(true); // Set loading to true while camera opens and photo is processed
-    let stream = null; // Declare stream here to ensure it's accessible in finally block
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1920 }, // Increased ideal resolution for better quality
-          height: { ideal: 1080 },
-          facingMode: { ideal: cameraFacingMode }
-        },
-      });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Wait for video to load metadata and start playing
-        await new Promise((resolve) => {
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current.play();
-            resolve();
-          };
-        });
-        // Give a small delay for video frames to become available and show live preview
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Half a second delay for live preview
-      }
-
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      // Draw video frame to canvas
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Add overlay text
-      ctx.fillStyle = "white";
-      ctx.font = "28px Arial"; // Slightly larger font for better readability
-      ctx.shadowColor = "black"; // Add shadow for better contrast
-      ctx.shadowBlur = 5;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-
-      ctx.fillText(`📍 ${locationName}`, 20, canvas.height - 70); // Adjusted Y position
-      ctx.fillText(`Lat: ${location.lat?.toFixed(5)} | Lon: ${location.lon?.toFixed(5)}`, 20, canvas.height - 40); // Adjusted Y position
-      ctx.fillText(`🕒 ${new Date().toLocaleString()}`, 20, canvas.height - 10); // Adjusted Y position
-
-      const photoData = canvas.toDataURL("image/jpeg", 0.9); // Use JPEG and higher quality for better results
-
-      setPhotos((prev) => [
-        ...prev,
-        { label: requiredPhotos[currentLabelIndex], data: photoData },
-      ]);
-      setCurrentLabelIndex((prev) => prev + 1);
-
-    } catch (error) {
-      console.error("Camera capture error:", error);
-      alert("Failed to capture photo. Check camera permissions or ensure no other app is using the camera. Error: " + error.name);
-    } finally {
-      // Crucially, stop the stream immediately after capture attempt
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        if (videoRef.current) {
-          videoRef.current.srcObject = null; // Clear the video source
-        }
-      }
-      setLoading(false); // Reset loading state
-    }
-  }, [currentLabelIndex, location, locationName, cameraFacingMode, isCheckin, requiredPhotosCheckin, requiredPhotosCheckout]); // Dependencies for useCallback
-
-  // This function only changes the preferred camera mode for the next capture (Check-in)
-  const toggleCameraFacingMode = () => {
-    setCameraFacingMode(prev => (prev === "environment" ? "user" : "environment"));
-  };
-
-
-  const handleCheckoutClick = () => {
-    setIsCheckin(false); // Set mode to Check-out
-    setShowCheckinCheckoutSelection(false); // Hide selection buttons
-    setShowAttendancePanel(true); // Show the checkout processing panel
-    setPhotos([]); // Clear photos for checkout
-    setCurrentLabelIndex(0); // Reset photo index for checkout
-    setBikeMeterReadingCheckout(""); // Clear checkout bike meter reading
-    setLocationName("Fetching location..."); // Reset location status
-    setLocation({ lat: null, lon: null }); // Clear location
-    captureLocationForCheckout(); // Initiate direct checkout process
-  };
-
-  const captureLocationForCheckout = () => {
-    if (!navigator.geolocation) {
-      setLocationName("Geolocation not supported by browser.");
-      alert("Your browser does not support location services. Proceeding without location.");
-      return;
-    }
-
     setLocationName("Fetching location...");
     setLocation({ lat: null, lon: null });
 
@@ -421,62 +207,141 @@ const MainDashboard = () => {
       async ({ coords }) => {
         const { latitude, longitude } = coords;
         setLocation({ lat: latitude, lon: longitude });
-        let resolvedLocationName = `Lat: ${latitude.toFixed(5)} Lon: ${longitude.toFixed(5)}`; // Default to coords
-
         try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-          if (res.ok) {
-            const data = await res.json();
-            resolvedLocationName = data.display_name || "Unknown Location";
-          } else {
-            console.error("Reverse geocoding failed, using coordinates.");
-          }
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          if (!res.ok) throw new Error("Reverse geocoding failed");
+          const data = await res.json();
+          setLocationName(data.display_name || "Unknown Location");
         } catch (err) {
-          console.error("Reverse geocoding error:", err, "using coordinates.");
+          console.error("❌ Reverse geocoding error:", err);
+          setLocationName("Unknown Location");
+          setMessage({ type: 'error', text: 'Unable to determine address from coordinates.' });
         }
-        setLocationName(resolvedLocationName);
       },
       (error) => {
-        console.error("❌ Geolocation error during checkout:", error);
-        let errorLocationName = "Location not available";
-        if (error.code === 1) errorLocationName = "Permission denied";
-        alert(`Could not fetch location for checkout: ${errorLocationName}. Proceeding without exact location.`);
-        setLocationName(errorLocationName);
+        console.error("❌ Geolocation error:", error);
+        let errorMsg = "An unknown error occurred while fetching location.";
+        if (error.code === 1) errorMsg = "Permission denied. Please allow location access.";
+        if (error.code === 2) errorMsg = "Position unavailable. Try again later.";
+        if (error.code === 3) errorMsg = "Location request timed out. Please try again.";
+        setMessage({ type: 'error', text: errorMsg });
+        setLocationName("Location not available");
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
+  const handleShowAttendance = () => {
+    setShowCheckinCheckoutSelection(true);
+    setShowAttendancePanel(false);
+    setViewAttendance(false);
+  };
+
+  const handleCheckinClick = () => {
+    setIsCheckin(true);
+    setShowCheckinCheckoutSelection(false);
+    setShowAttendancePanel(true);
+    setPhotos([]);
+    setCurrentLabelIndex(0);
+    setSelectedOffice(null);
+    setSelectedState(null);
+    setOccupation("");
+    setBikeMeterReadingCheckin("");
+    setLocationName("Fetching location...");
+    setLocation({ lat: null, lon: null });
+    captureLocation();
+  };
+
+  const handleCheckoutClick = () => {
+    setIsCheckin(false);
+    setShowCheckinCheckoutSelection(false);
+    setShowAttendancePanel(true);
+    setPhotos([]);
+    setCurrentLabelIndex(0);
+    setBikeMeterReadingCheckout("");
+    setLocationName("Fetching location...");
+    setLocation({ lat: null, lon: null });
+    captureLocation();
+  };
+
+  const capturePhoto = useCallback(async () => {
+    if (INVALID_LOCATIONS.includes(locationName) || !location.lat || !location.lon) {
+      setMessage({ type: 'error', text: "Location is not available. Please click 'Refetch Location'." });
+      return;
+    }
+    const requiredPhotos = isCheckin ? requiredPhotosCheckin : requiredPhotosCheckout;
+    if (currentLabelIndex >= requiredPhotos.length) {
+      setMessage({ type: 'warning', text: "All required photos have already been captured." });
+      return;
+    }
+
+    setLoading(true);
+    let stream = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: { ideal: cameraFacingMode } },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await new Promise((resolve) => {
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play();
+            resolve();
+          };
+        });
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.font = "28px Arial";
+      ctx.shadowColor = "black";
+      ctx.shadowBlur = 5;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText(`📍 ${locationName}`, 20, canvas.height - 70);
+      ctx.fillText(`Lat: ${location.lat?.toFixed(5)} | Lon: ${location.lon?.toFixed(5)}`, 20, canvas.height - 40);
+      ctx.fillText(`🕒 ${new Date().toLocaleString()}`, 20, canvas.height - 10);
+      const photoData = canvas.toDataURL("image/jpeg", 0.9);
+      setPhotos((prev) => [...prev, { label: requiredPhotos[currentLabelIndex], data: photoData }]);
+      setCurrentLabelIndex((prev) => prev + 1);
+    } catch (error) {
+      console.error("Camera capture error:", error);
+      setMessage({ type: 'error', text: `Failed to capture photo. Error: ${error.name}` });
+    } finally {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        if (videoRef.current) videoRef.current.srcObject = null;
+      }
+      setLoading(false);
+    }
+  }, [currentLabelIndex, location, locationName, cameraFacingMode, isCheckin, requiredPhotosCheckin, requiredPhotosCheckout]);
+
+  const toggleCameraFacingMode = () => {
+    setCameraFacingMode(prev => (prev === "environment" ? "user" : "environment"));
+  };
+
   const handleCheckoutSubmission = async () => {
-    // Validation for Checkout
     const requiredPhotos = requiredPhotosCheckout;
     if (photos.length < requiredPhotos.length || INVALID_LOCATIONS.includes(locationName)) {
-      alert("All required photos must be captured and a valid location must be available.");
+      setMessage({ type: 'error', text: "All required photos must be captured and a valid location must be available." });
       return;
     }
-    // Validate bike meter reading if required
     if (checkedInAsSEWithMeter && !bikeMeterReadingCheckout) {
-      alert("Please enter your bike meter reading for check-out.");
+      setMessage({ type: 'error', text: "Please enter your bike meter reading for check-out." });
       return;
     }
 
-    const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-    if (!headers) return; // Exit if headers are not available
-
+    const headers = getAuthHeaders();
+    if (!headers) return;
     setLoading(true);
     const compressImage = async (blob) => {
       try {
-        const options = {
-          maxSizeMB: 0.8,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        };
+        const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1920, useWebWorker: true };
         return await imageCompression(blob, options);
       } catch (error) {
         console.error("Image compression failed:", error);
@@ -486,13 +351,12 @@ const MainDashboard = () => {
 
     const formData = new FormData();
     formData.append("name", userName);
-    formData.append("erpId", localStorage.getItem("erpId")); // erpId is login email/pacsId
+    formData.append("erpId", userERPId);
     formData.append("latitude", location.lat || "N/A");
     formData.append("longitude", location.lon || "N/A");
     formData.append("locationName", locationName);
     formData.append("submissionType", "Check-out");
-    formData.append("occupation", localStorage.getItem("lastCheckinOccupation") || "N/A"); // Use stored occupation
-
+    formData.append("occupation", localStorage.getItem("lastCheckinOccupation") || "N/A");
     if (checkedInAsSEWithMeter && bikeMeterReadingCheckout) {
       formData.append("bikeMeterReading", bikeMeterReadingCheckout);
     }
@@ -505,76 +369,47 @@ const MainDashboard = () => {
         formData.append("photos", compressedBlob, `${label}-${index + 1}.jpg`);
         formData.append("photoLabels[]", label);
       }
-
-      const response = await fetch("http://localhost:5001/api/erp-submission", {
+      const response = await fetch(`${API_BASE_URL}/erp-submission`, {
         method: "POST",
-        headers: { // <-- NEW: Add headers for authentication
-            'Authorization': headers.Authorization,
-            'X-Company-ID': headers['X-Company-ID']
-        },
+        headers: { 'Authorization': headers.Authorization, 'X-Company-ID': headers['X-Company-ID'] },
         body: formData,
       });
 
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-        if (response.ok) {
-          alert("✅ Check-out submitted successfully!");
-          setShowAttendancePanel(false);
-          setShowCheckinCheckoutSelection(true);
-          localStorage.removeItem("checkedInAsSEWithMeter");
-          localStorage.removeItem("lastCheckinOccupation");
-        } else {
-          alert("❌ Check-out failed: " + data.message);
-        }
+      const data = await response.json();
+      if (response.ok) {
+        setMessage({ type: 'success', text: "Check-out submitted successfully!" });
+        setShowAttendancePanel(false);
+        setShowCheckinCheckoutSelection(true);
+        localStorage.removeItem("checkedInAsSEWithMeter");
+        localStorage.removeItem("lastCheckinOccupation");
       } else {
-        const text = await response.text();
-        console.error("Unexpected response:", text);
-        alert("Unexpected response from server (not JSON). Check the backend route.");
+        setMessage({ type: 'error', text: `Check-out failed: ${data.message}` });
       }
-
     } catch (error) {
       console.error("Final Check-out submission error:", error);
-      alert("An error occurred during check-out process.");
+      setMessage({ type: 'error', text: "An error occurred during check-out process." });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- Check-in Form Submission Handler ---
   const handleSubmit = async () => {
-    // Validation for Check-in
     const requiredPhotos = requiredPhotosCheckin;
     if (
-      !userName ||
-      !occupation ||
-      !selectedState ||
-      !selectedOffice ||
-      photos.length < requiredPhotos.length ||
-      INVALID_LOCATIONS.includes(locationName)
+      !userName || !occupation || !selectedState || !selectedOffice ||
+      photos.length < requiredPhotos.length || INVALID_LOCATIONS.includes(locationName)
     ) {
-      alert("All fields must be completed and a valid location must be captured before submission.");
+      setMessage({ type: 'error', text: "All fields must be completed and a valid location must be captured." });
       return;
     }
 
-    // Validate bike meter reading for SE check-in
-    if (occupation === "SE" && !bikeMeterReadingCheckin) {
-      alert("Please enter your bike meter reading.");
-      return;
-    }
-
-    const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-    if (!headers) return; // Exit if headers are not available
-
+    const headers = getAuthHeaders();
+    if (!headers) return;
     setLoading(true);
 
     const compressImage = async (blob) => {
       try {
-        const options = {
-          maxSizeMB: 0.8,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        };
+        const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1920, useWebWorker: true };
         return await imageCompression(blob, options);
       } catch (error) {
         console.error("Image compression failed:", error);
@@ -584,16 +419,16 @@ const MainDashboard = () => {
 
     const formData = new FormData();
     formData.append("name", userName);
-    formData.append("erpId", localStorage.getItem("erpId")); // erpId is login email/pacsId
+    formData.append("erpId", userERPId);
     formData.append("occupation", occupation);
     formData.append("state", selectedState.value);
-    formData.append("dccb", JSON.stringify(selectedOffice)); // Send the full selectedOffice object as JSON string
+    formData.append("dccb", JSON.stringify(selectedOffice));
     formData.append("latitude", location.lat);
     formData.append("longitude", location.lon);
     formData.append("locationName", locationName);
     formData.append("submissionType", "Check-in");
 
-    if (occupation === "SE" && bikeMeterReadingCheckin) {
+    if (bikeMeterReadingCheckin) {
       formData.append("bikeMeterReading", bikeMeterReadingCheckin);
     }
 
@@ -606,516 +441,501 @@ const MainDashboard = () => {
         formData.append("photoLabels[]", label);
       }
 
-      const response = await fetch("http://localhost:5001/api/erp-submission", {
+      const response = await fetch(`${API_BASE_URL}/erp-submission`, {
         method: "POST",
-        headers: { // <-- NEW: Add headers for authentication
-            'Authorization': headers.Authorization,
-            'X-Company-ID': headers['X-Company-ID']
-        },
+        headers: { 'Authorization': headers.Authorization, 'X-Company-ID': headers['X-Company-ID'] },
         body: formData,
       });
 
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        const data = await response.json();
-
-        if (response.ok) {
-          alert(`✅ Check-in submitted successfully!`);
-          if (occupation === "SE" && bikeMeterReadingCheckin) {
-            localStorage.setItem("checkedInAsSEWithMeter", "true");
-            localStorage.setItem("lastCheckinOccupation", occupation);
-          } else {
-            localStorage.removeItem("checkedInAsSEWithMeter");
-            localStorage.removeItem("lastCheckinOccupation");
-          }
-
-          setPhotos([]);
-          setCurrentLabelIndex(0);
-          setSelectedOffice(null);
-          setSelectedState(null);
-          setOccupation("");
-          setBikeMeterReadingCheckin("");
-          setShowAttendancePanel(false);
-          setShowCheckinCheckoutSelection(true);
+      const data = await response.json();
+      if (response.ok) {
+        setMessage({ type: 'success', text: "Check-in submitted successfully! ✅" });
+        if (bikeMeterReadingCheckin) {
+          localStorage.setItem("checkedInAsSEWithMeter", "true");
         } else {
-          alert("❌ Submission failed: " + data.message);
+          localStorage.removeItem("checkedInAsSEWithMeter");
         }
+        localStorage.setItem("lastCheckinOccupation", occupation);
+
+        setPhotos([]);
+        setCurrentLabelIndex(0);
+        setSelectedOffice(null);
+        setSelectedState(null);
+        setOccupation("");
+        setBikeMeterReadingCheckin("");
+        setShowAttendancePanel(false);
+        setShowCheckinCheckoutSelection(true);
       } else {
-        const text = await response.text();
-        console.error("Unexpected response:", text);
-        alert("Unexpected response from server (not JSON). Check the backend route.");
+        setMessage({ type: 'error', text: `Submission failed: ${data.message} ❌` });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("An error occurred while submitting data.");
+      setMessage({ type: 'error', text: "An error occurred while submitting data. ⛔" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header className="app-header d-flex align-items-center px-4" style={{ backgroundColor: "#0d47a1" }}>
-        <img
-          src="/nectar-logo.png"
-          alt="Nectar Logo"
-          height={40}
-          width={40}
-          className="me-2"
-        />
-        <h4 className="m-0 text-white fw-bold">Nectar Infotel</h4>
-      </header>
+    <>
+      <style jsx="true">{`
+        :root {
+          --ui-orange: #FF8F00;
+          --ui-turquoise: #00796B;
+          --ui-dark-turquoise: #004d40;
+          --ui-white: #FAFAFA;
+          --ui-dark: #333;
+          --ui-gray: #6c757d;
+          --ui-light-blue: #e7f0ff;
+          --ui-dashboard-bg: #f4f7f9;
+          --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+          --transition-speed: 0.3s;
+        }
+        
+        .dashboard-container {
+          min-height: 100vh;
+          background-color: var(--ui-dashboard-bg);
+          background-image: url("data:image/svg+xml,%3Csvg width='42' height='44' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%239e9e9e' fill-opacity='0.05'%3E%3Cpath d='M0,0 L0,44 L21,44 L21,0 L0,0 Z M21,0 L21,22 L42,22 L42,0 L21,0 Z M21,22 L21,44 L42,44 L42,22 L21,22 Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+          font-family: 'Poppins', sans-serif;
+          display: flex;
+          flex-direction: column;
+        }
 
-      <motion.div className="w-100 text-center text-dark py-4 greeting-card-full shadow-sm"
-        initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
-        <h5>{greeting}</h5>
-      </motion.div>
+        .app-header {
+          background-color: var(--ui-dark-turquoise);
+          background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+          color: var(--ui-orange);
+          padding: 1rem 1.5rem;
+          display: flex;
+          align-items: center;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          border-bottom: 3px solid var(--ui-orange);
+        }
+        
+        .app-header h4 {
+          margin: 0;
+          font-weight: 700;
+          font-size: 1.75rem;
+        }
 
-      <main className="container my-3 flex-grow-1">
-        <motion.div className="row justify-content-center"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }}>
-          {!showCheckinCheckoutSelection && !showAttendancePanel && !viewAttendance && (
-            <>
-              <div className="col-md-6 mb-3">
-                <motion.div whileHover={{ scale: 1.05 }} className="card text-center shadow-sm panel-card"
-                  onClick={handleShowAttendance} style={{ cursor: "pointer", backgroundColor: "#d0e7ff" }}>
-                  <div className="card-body">
-                    <h5 className="card-title">Attendance Panel</h5>
-                    <p className="card-text">Submit your Attendance Here</p>
-                    <button className="btn btn-outline-primary">Start</button>
-                  </div>
-                </motion.div>
-              </div>
-              <div className="col-md-6 mb-3">
-                <motion.div whileHover={{ scale: 1.05 }} className="card text-center shadow-sm panel-card"
-                  onClick={() => { setViewAttendance(true); setShowAttendancePanel(false); setShowCheckinCheckoutSelection(false); }}
-                  style={{ cursor: "pointer", backgroundColor: "#d0e7ff" }}>
-                  <div className="card-body">
-                    <h5 className="card-title">Attendance Submission</h5>
-                    <p className="card-text">Check your Attendance Submission history.</p>
-                    <button className="btn btn-outline-primary">View Submission</button>
-                  </div>
-                </motion.div>
-              </div>
-            </>
-          )}
+        .greeting-card {
+          background-image: linear-gradient(45deg, var(--ui-turquoise), #005f54);
+          color: white;
+          padding: 2rem 1rem;
+          text-align: center;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          border-radius: 0 0 25px 25px;
+          border-bottom: 3px solid var(--ui-orange);
+        }
+        
+        .panel-card {
+            background-color: #fff;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 2.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .form-label-custom {
+            font-weight: 500;
+            color: var(--ui-dark);
+        }
+
+        .form-control-custom {
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          padding: 10px 15px;
+          transition: all var(--transition-speed);
+        }
+
+        .form-control-custom:focus {
+          border-color: var(--ui-turquoise);
+          box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+          outline: none;
+        }
+
+        .btn-custom {
+          font-weight: 600;
+          padding: 12px;
+          border-radius: 8px;
+          transition: all var(--transition-speed);
+        }
+
+        .btn-primary-custom {
+          background-image: linear-gradient(to right, var(--ui-turquoise), var(--ui-dark-turquoise));
+          color: var(--ui-white);
+          border: none;
+        }
+
+        .btn-primary-custom:hover {
+          background-image: linear-gradient(to right, var(--ui-dark-turquoise), var(--ui-turquoise));
+          transform: translateY(-2px);
+        }
+
+        .btn-secondary-custom {
+          background-color: #6c757d;
+          background-image: linear-gradient(to right, #6c757d, #5a6268);
+          color: var(--ui-white);
+          border: none;
+        }
+
+        .btn-secondary-custom:hover {
+          background-image: linear-gradient(to right, #5a6268, #6c757d);
+          transform: translateY(-2px);
+        }
+        
+        .btn-orange-custom {
+          background-image: linear-gradient(to right, var(--ui-orange), #c46d00);
+          color: var(--ui-white);
+          border: none;
+        }
+        
+        .btn-orange-custom:hover {
+          background-image: linear-gradient(to right, #c46d00, var(--ui-orange));
+          transform: translateY(-2px);
+        }
+
+        .camera-preview-container {
+          position: relative;
+          background-color: #000;
+          border-radius: 15px;
+          overflow: hidden;
+          max-width: 400px; /* New: Reduces the camera screen size */
+          margin: 0 auto; /* New: Centers the camera preview */
+        }
+
+        .camera-preview-container video {
+          width: 100%;
+          height: auto;
+        }
+
+        .spinner-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          z-index: 10;
+        }
+
+        .photo-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+          gap: 1rem;
+        }
+        
+        .photo-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #ddd;
+        }
+        
+        .photo-label {
+            font-size: 0.8rem;
+            color: var(--ui-dark);
+            text-align: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+      `}</style>
+      <div className="dashboard-container">
+        <header className="app-header">
+          <FaFingerprint style={{ fontSize: "2rem", marginRight: "0.5rem" }} />
+          <h4>AI-HRMS</h4>
+        </header>
+
+        <motion.div className="greeting-card"
+          initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
+          <h5>{greeting}, {userName}!</h5>
+          <p className="small mb-0">ERP ID: {userERPId}</p>
         </motion.div>
 
-        <AnimatePresence>
-          {/* Check-in/Check-out Selection Panel */}
-          {showCheckinCheckoutSelection && (
-            <motion.div className="row justify-content-center mt-4"
-              initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}>
-              <div className="col-md-10">
-                <div className="card shadow-sm p-4 panel-card" style={{ backgroundColor: "#e7f0ff" }}>
-                  <h4 className="mb-4 text-primary text-center">Choose Your Action</h4>
-                  <div className="d-flex justify-content-around mb-3">
-                    <button className="btn btn-success btn-lg mx-2" onClick={handleCheckinClick}>Check-in</button>
-                    <button className="btn btn-warning btn-lg mx-2" onClick={handleCheckoutClick}>Check-out</button>
-                  </div>
-                  <button
-                    className="btn btn-secondary mt-3"
-                    onClick={() => setShowCheckinCheckoutSelection(false)}
-                  >
-                    Back to Main
-                  </button>
+        <main className="container my-5 flex-grow-1">
+          {message && <Message type={message.type} text={message.text} />}
+
+          <AnimatePresence mode="wait">
+            {/* Main Navigation Panel */}
+            {!showCheckinCheckoutSelection && !showAttendancePanel && !viewAttendance && (
+              <motion.div key="main-panel" className="row justify-content-center"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                <div className="col-md-6 mb-3">
+                  <motion.div whileHover={{ scale: 1.05 }} className="card text-center panel-card"
+                    onClick={handleShowAttendance} style={{ cursor: "pointer" }}>
+                    <div className="card-body">
+                      <FaSignInAlt size={48} color="var(--ui-turquoise)" className="mb-3" />
+                      <h5 className="card-title">Attendance Panel</h5>
+                      <p className="card-text text-muted">Submit your attendance here.</p>
+                      <button className="btn btn-primary-custom w-75">Start</button>
+                    </div>
+                  </motion.div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div className="col-md-6 mb-3">
+                  <motion.div whileHover={{ scale: 1.05 }} className="card text-center panel-card"
+                    onClick={() => { setViewAttendance(true); }} style={{ cursor: "pointer" }}>
+                    <div className="card-body">
+                      <FaFileAlt size={48} color="var(--ui-orange)" className="mb-3" />
+                      <h5 className="card-title">Attendance Submission</h5>
+                      <p className="card-text text-muted">View your attendance history.</p>
+                      <button className="btn btn-secondary-custom w-75">View History</button>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
 
-        <AnimatePresence>
-          {/* Check-in Form */}
-          {showAttendancePanel && isCheckin && (
-            <motion.div className="row justify-content-center mt-4"
-              initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}>
-              <div className="col-md-10">
-                <div className="card shadow-sm p-4 panel-card" style={{ backgroundColor: "#e7f0ff" }}>
-                  <h4 className="mb-4 text-primary">Check-in Details</h4>
-
-                  <div className="mb-3">
-                    <label className="form-label">Your Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={userName}
-                      readOnly
-                      disabled
-                    />
+            {/* Check-in/Check-out Selection Panel */}
+            {showCheckinCheckoutSelection && (
+              <motion.div key="selection-panel" className="row justify-content-center"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                <div className="col-md-10">
+                  <div className="card text-center panel-card">
+                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Choose Your Action</h4>
+                    <div className="d-flex justify-content-around mb-3">
+                      <motion.button whileHover={{ scale: 1.05 }} className="btn btn-primary-custom btn-lg w-40" onClick={handleCheckinClick}>
+                        Check-in 🚀
+                      </motion.button>
+                      <motion.button whileHover={{ scale: 1.05 }} className="btn btn-orange-custom btn-lg w-40" onClick={handleCheckoutClick}>
+                        Check-out 👋
+                      </motion.button>
+                    </div>
+                    <button className="btn btn-secondary-custom mt-3" onClick={() => setShowCheckinCheckoutSelection(false)}>
+                      Back
+                    </button>
                   </div>
+                </div>
+              </motion.div>
+            )}
 
-                  {/* Dynamic Occupation Dropdown */}
-                  <div className="mb-3">
-                    <label htmlFor="occupation" className="form-label text-primary">Select your occupation</label>
-                    <Select
-                      id="occupation"
-                      options={occupationOptions} // Now an array of {value, label} objects
-                      value={occupationOptions.find(opt => opt.value === occupation)} // Find selected object
-                      onChange={(option) => setOccupation(option ? option.value : "")} // Set value from option
-                      required
-                      isDisabled={fetchingOccupations}
-                      isLoading={fetchingOccupations}
-                      placeholder={fetchingOccupations ? "Loading occupations..." : "Select your occupation"}
-                      noOptionsMessage={() => "No occupations found"}
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderColor: '#ced4da',
-                          boxShadow: 'none',
-                          '&:hover': { borderColor: '#80bdff' }
-                        }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isFocused ? '#e7f0ff' : 'white',
-                          color: 'black',
-                        }),
-                      }}
-                    />
-                  </div>
+            {/* Check-in Form */}
+            {showAttendancePanel && isCheckin && (
+              <motion.div key="checkin-form" className="row justify-content-center"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                <div className="col-md-10">
+                  <div className="card panel-card">
+                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Check-in Details</h4>
 
-                  {/* Dynamic State Dropdown using React-Select */}
-                  <div className="mb-3">
-                    <label htmlFor="stateSelect" className="form-label">Select State</label>
-                    <Select
-                      id="stateSelect"
-                      options={stateOptions}
-                      value={selectedState}
-                      onChange={(option) => {
-                        setSelectedState(option);
-                        setSelectedOffice(null);
-                        setOfficeOptions([]);
-                      }}
-                      placeholder={fetchingStates ? "Loading states..." : "Select a State"}
-                      isClearable
-                      isLoading={fetchingStates}
-                      isDisabled={fetchingStates}
-                      noOptionsMessage={() => "No states found"}
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderColor: '#ced4da',
-                          boxShadow: 'none',
-                          '&:hover': { borderColor: '#80bdff' }
-                        }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isFocused ? '#e7f0ff' : 'white',
-                          color: 'black',
-                        }),
-                      }}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="dccbName" className="form-label text-primary">
-                      Office or DCCB where you are submitting attendance
-                    </label>
-                    {/* React-Select Component for Offices */}
-                    <Select
-                      id="dccbName"
-                      options={officeOptions}
-                      value={selectedOffice}
-                      onChange={setSelectedOffice}
-                      placeholder={fetchingOffices ? "Loading offices..." : "Search or select Office/DCCB"}
-                      isClearable
-                      isLoading={fetchingOffices}
-                      isDisabled={!selectedState || fetchingOffices}
-                      noOptionsMessage={() => !selectedState ? "Select a State first" : "No offices found"}
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderColor: '#ced4da',
-                          boxShadow: 'none',
-                          '&:hover': { borderColor: '#80bdff' }
-                        }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isFocused ? '#e7f0ff' : 'white',
-                          color: 'black',
-                        }),
-                      }}
-                    />
-                  </div>
-
-                  {/* Bike Meter Reading Input for SE */}
-                  {occupation === "SE" && (
                     <div className="mb-3">
-                      <label htmlFor="bikeMeterReadingCheckin" className="form-label text-primary">
-                        Enter your bike meter reading
-                      </label>
+                      <label className="form-label-custom">Your Name</label>
+                      <input type="text" className="form-control-custom" value={userName} readOnly disabled />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="occupation" className="form-label-custom">Select your occupation</label>
+                      <Select
+                        id="occupation"
+                        options={occupationOptions}
+                        value={occupationOptions.find(opt => opt.value === occupation)}
+                        onChange={(option) => setOccupation(option ? option.value : "")}
+                        isDisabled={fetchingOccupations}
+                        isLoading={fetchingOccupations}
+                        placeholder={fetchingOccupations ? "Loading..." : "Select occupation"}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="stateSelect" className="form-label-custom">Select State</label>
+                      <Select
+                        id="stateSelect"
+                        options={stateOptions}
+                        value={selectedState}
+                        onChange={(option) => { setSelectedState(option); setSelectedOffice(null); setOfficeOptions([]); }}
+                        placeholder={fetchingStates ? "Loading..." : "Select a State"}
+                        isDisabled={fetchingStates}
+                        isLoading={fetchingStates}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="dccbName" className="form-label-custom">Select Office</label>
+                      <Select
+                        id="dccbName"
+                        options={officeOptions}
+                        value={selectedOffice}
+                        onChange={setSelectedOffice}
+                        placeholder={fetchingOffices ? "Loading..." : "Search or select Office/DCCB"}
+                        isDisabled={!selectedState || fetchingOffices}
+                        isLoading={fetchingOffices}
+                      />
+                    </div>
+
+                    <div className="mb-3">
+                      <label htmlFor="bikeMeterReadingCheckin" className="form-label-custom">Bike meter reading (Optional)</label>
                       <input
                         type="number"
                         id="bikeMeterReadingCheckin"
-                        className="form-control"
+                        className="form-control-custom"
                         value={bikeMeterReadingCheckin}
                         onChange={(e) => setBikeMeterReadingCheckin(e.target.value)}
                         placeholder="e.g., 12345 km"
-                        required
                       />
                     </div>
-                  )}
 
-                  <div className="mb-3">
-                    <label className="form-label">Capture Photos</label>
-                    <div className="p-3 border rounded bg-light">
-                      {/* Use dynamic requiredPhotosCheckin here */}
-                      {currentLabelIndex < requiredPhotosCheckin.length ? (
-                        <>
-                          <div
-                            className="camera-label-box d-flex align-items-center mb-3 p-3 bg-white shadow-sm rounded"
-                            style={{ width: "100%" }}
-                          >
-                            <FaCamera size={40} color="#0d6efd" className="me-3" />
-                            <h5 className="mb-0">{requiredPhotosCheckin[currentLabelIndex]}</h5>
-                          </div>
-                          <div className="camera-preview-container mb-3 position-relative">
-                            {loading && (
-                              <div className="spinner-overlay d-flex justify-content-center align-items-center">
-                                <div className="spinner-border text-primary" role="status">
-                                  <span className="visually-hidden">Loading camera...</span>
-                                </div>
-                              </div>
-                            )}
-                            <video ref={videoRef} autoPlay playsInline className="w-100 rounded"></video>
-                            <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-                          </div>
-
-                          <div className="d-flex justify-content-between mb-3">
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={toggleCameraFacingMode}
-                              disabled={loading}
-                            >
-                              Switch Camera ({cameraFacingMode === "environment" ? "Back" : "Front"})
-                            </button>
-                            <button
-                              className="btn btn-primary"
-                              onClick={capturePhoto}
-                              disabled={loading}
-                            >
-                              {loading ? "Capturing..." : "Capture Photo"}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-success fw-bold">✅ All required photos captured</p>
-                      )}
-
-                      <div className="photo-grid mt-4">
-                        {photos.map((p, i) => (
-                          <div key={i} className="photo-item card shadow-sm p-2 mb-3">
-                            <div className="photo-label">{p.label}</div>
-                            <img src={p.data} alt={p.label} className="img-fluid rounded" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <strong>📍 Current Location:</strong> {locationName} <br />
-                    <small>
-                      Latitude: {location.lat?.toFixed(5) || "--"} | Longitude: {location.lon?.toFixed(5) || "--"}
-                    </small>
-                    <br />
-                    <button className="btn btn-sm btn-link p-0 mt-1" onClick={captureLocation}>Refetch Location</button>
-                  </div>
-
-                  <button
-                    className="btn btn-primary w-100 mt-3 d-flex align-items-center justify-content-center"
-                    onClick={handleSubmit}
-                    disabled={
-                      photos.length < requiredPhotosCheckin.length ||
-                      loading ||
-                      !occupation ||
-                      !selectedOffice ||
-                      !selectedState ||
-                      INVALID_LOCATIONS.includes(locationName) ||
-                      (occupation === "SE" && !bikeMeterReadingCheckin)
-                    }
-                  >
-                    {loading ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Submitting...
-                      </>
-                    ) : (
-                      "Submit Check-in"
-                    )}
-                  </button>
-                  <button
-                    className="btn btn-secondary w-100 mt-2"
-                    onClick={() => { setShowAttendancePanel(false); setShowCheckinCheckoutSelection(true); }}
-                  >
-                    Back
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Checkout Processing Panel - Updated for conditional photos/meter */}
-          {showAttendancePanel && !isCheckin && (
-            <motion.div className="row justify-content-center mt-4"
-              initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}>
-              <div className="col-md-10">
-                <div className="card shadow-sm p-4 panel-card text-center" style={{ backgroundColor: "#ffe0b2" }}>
-                  <h4 className="mb-3 text-warning">Check-out Details</h4>
-
-                  <div className="mb-3">
-                    <strong>📍 Current Location:</strong> {locationName} <br />
-                    <small>
-                      Latitude: {location.lat?.toFixed(5) || "--"} | Longitude: {location.lon?.toFixed(5) || "--"}
-                    </small>
-                    <br />
-                    <button className="btn btn-sm btn-link p-0 mt-1" onClick={captureLocationForCheckout}>Refetch Location</button>
-                  </div>
-
-                  {/* Bike Meter Reading Input for SE Checkout */}
-                  {checkedInAsSEWithMeter && (
                     <div className="mb-3">
-                      <label htmlFor="bikeMeterReadingCheckout" className="form-label text-warning">
-                        Enter your bike meter riding
-                      </label>
-                      <input
-                        type="number"
-                        id="bikeMeterReadingCheckout"
-                        className="form-control"
-                        value={bikeMeterReadingCheckout}
-                        onChange={(e) => setBikeMeterReadingCheckout(e.target.value)}
-                        placeholder="e.g., 54321 km"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  <div className="mb-3">
-                    <label className="form-label">Capture Photos</label>
-                    <div className="p-3 border rounded bg-light">
-                      {/* Use dynamic requiredPhotosCheckout here */}
-                      {currentLabelIndex < requiredPhotosCheckout.length ? (
-                        <>
-                          <div
-                            className="camera-label-box d-flex align-items-center mb-3 p-3 bg-white shadow-sm rounded"
-                            style={{ width: "100%" }}
-                          >
-                            <FaCamera size={40} color="#ffc107" className="me-3" />
-                            <h5 className="mb-0">{requiredPhotosCheckout[currentLabelIndex]}</h5>
-                          </div>
-                          <div className="camera-preview-container mb-3 position-relative">
-                            {loading && (
-                              <div className="spinner-overlay d-flex justify-content-center align-items-center">
-                                <div className="spinner-border text-warning" role="status">
-                                  <span className="visually-hidden">Loading camera...</span>
-                                </div>
-                              </div>
-                            )}
-                            <video ref={videoRef} autoPlay playsInline className="w-100 rounded"></video>
-                            <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-                          </div>
-
-                          <div className="d-flex justify-content-between mb-3">
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={toggleCameraFacingMode}
-                              disabled={loading}
-                            >
-                              Switch Camera ({cameraFacingMode === "environment" ? "Back" : "Front"})
-                            </button>
-                            <button
-                              className="btn btn-warning"
-                              onClick={capturePhoto}
-                              disabled={loading}
-                            >
-                              {loading ? "Capturing..." : "Capture Photo"}
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-success fw-bold">✅ All required photos captured</p>
-                      )}
-
-                      <div className="photo-grid mt-4">
-                        {photos.map((p, i) => (
-                          <div key={i} className="photo-item card shadow-sm p-2 mb-3">
-                            <div className="photo-label">{p.label}</div>
-                            <img src={p.data} alt={p.label} className="img-fluid rounded" />
-                          </div>
-                        ))}
+                      <label className="form-label-custom">Capture Photos</label>
+                      <div className="p-3 border rounded">
+                        {currentLabelIndex < requiredPhotosCheckin.length ? (
+                          <>
+                            <div className="d-flex align-items-center mb-3 p-3">
+                              <FaCamera size={40} color="var(--ui-turquoise)" className="me-3" />
+                              <h5 className="mb-0">{requiredPhotosCheckin[currentLabelIndex]}</h5>
+                            </div>
+                            <div className="camera-preview-container mb-3 position-relative">
+                              {loading && (<div className="spinner-overlay d-flex justify-content-center align-items-center">
+                                <div className="spinner-border" style={{ color: "var(--ui-orange)" }} role="status"></div>
+                              </div>)}
+                              <video ref={videoRef} autoPlay playsInline></video>
+                              <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
+                            </div>
+                            <div className="d-flex justify-content-between mb-3">
+                              <button className="btn btn-secondary-custom btn-sm" onClick={toggleCameraFacingMode} disabled={loading}>
+                                Switch Camera ({cameraFacingMode === "environment" ? "Back" : "Front"})
+                              </button>
+                              <button className="btn btn-primary-custom" onClick={capturePhoto} disabled={loading}>
+                                {loading ? "Capturing..." : "Capture Photo"}
+                              </button>
+                            </div>
+                          </>
+                        ) : (<p className="text-success fw-bold"><FaCheckCircle className="me-2" /> All photos captured</p>)}
+                        <div className="photo-grid mt-4">
+                          {photos.map((p, i) => (
+                            <div key={i} className="photo-item card p-2 mb-3">
+                              <div className="photo-label">{p.label}</div>
+                              <img src={p.data} alt={p.label} className="img-fluid rounded" />
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
+
+                    <div className="mb-3 text-center">
+                      <FaMapMarkerAlt className="me-2" color="var(--ui-turquoise)" /> <strong>Current Location:</strong> {locationName} <br />
+                      <small>
+                        Lat: {location.lat?.toFixed(5) || "--"} | Lon: {location.lon?.toFixed(5) || "--"}
+                      </small>
+                      <br />
+                      <button className="btn btn-sm btn-link mt-1" onClick={captureLocation}>Refetch Location</button>
+                    </div>
+
+                    <button className="btn btn-primary-custom w-100 mt-3" onClick={handleSubmit} disabled={
+                      photos.length < requiredPhotosCheckin.length || loading || !occupation || !selectedOffice || !selectedState || INVALID_LOCATIONS.includes(locationName)
+                    }>
+                      {loading ? "Submitting..." : "Submit Check-in"}
+                    </button>
+                    <button className="btn btn-secondary-custom w-100 mt-2" onClick={() => { setShowAttendancePanel(false); setShowCheckinCheckoutSelection(true); }} disabled={loading}>Back</button>
                   </div>
+                </div>
+              </motion.div>
+            )}
 
-                  <button
-                    className="btn btn-warning w-100 mt-3 d-flex align-items-center justify-content-center"
-                    onClick={handleCheckoutSubmission}
-                    disabled={
-                      photos.length < requiredPhotosCheckout.length ||
-                      loading ||
-                      INVALID_LOCATIONS.includes(locationName) ||
-                      (checkedInAsSEWithMeter && !bikeMeterReadingCheckout)
-                    }
-                  >
-                    {loading ? (
-                      <>
-                        <span
-                          className="spinner-border spinner-border-sm me-2"
-                          role="status"
-                          aria-hidden="true"
-                        ></span>
-                        Submitting Check-out...
-                      </>
-                    ) : (
-                      "Submit Check-out"
+            {/* Checkout Processing Panel */}
+            {showAttendancePanel && !isCheckin && (
+              <motion.div key="checkout-form" className="row justify-content-center"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                <div className="col-md-10">
+                  <div className="card panel-card">
+                    <h4 className="mb-3" style={{ color: "var(--ui-orange)" }}>Check-out Details</h4>
+
+                    <div className="mb-3 text-center">
+                      <FaMapMarkerAlt className="me-2" color="var(--ui-orange)" /> <strong>Current Location:</strong> {locationName} <br />
+                      <small>
+                        Lat: {location.lat?.toFixed(5) || "--"} | Lon: {location.lon?.toFixed(5) || "--"}
+                      </small>
+                      <br />
+                      <button className="btn btn-sm btn-link mt-1" onClick={captureLocation}>Refetch Location</button>
+                    </div>
+
+                    {checkedInAsSEWithMeter && (
+                      <div className="mb-3">
+                        <label htmlFor="bikeMeterReadingCheckout" className="form-label-custom">Bike meter reading</label>
+                        <input type="number" id="bikeMeterReadingCheckout" className="form-control-custom"
+                          value={bikeMeterReadingCheckout} onChange={(e) => setBikeMeterReadingCheckout(e.target.value)} required />
+                      </div>
                     )}
-                  </button>
-                  <button
-                    className="btn btn-secondary w-100 mt-2"
-                    onClick={() => { setShowAttendancePanel(false); setShowCheckinCheckoutSelection(true); }}
-                    disabled={loading}
-                  >
-                    Back
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
 
-          {/* View Attendance Panel */}
-          {viewAttendance && (
-            <motion.div className="row justify-content-center mt-4"
-              initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}>
-              <div className="col-md-12">
-                <div className="card shadow-sm p-4 panel-card" style={{ backgroundColor: "#e7f0ff" }}>
-                  <h4 className="mb-4 text-primary">Attendance Submission History</h4>
-                  {/* Pass erpId to SubmissionTable if it needs to filter by user */}
-                  <SubmissionTable erpId={user?.email || localStorage.getItem("erpId")} /> {/* Ensure erpId is passed */}
-                  <button
-                    className="btn btn-secondary w-100 mt-3"
-                    onClick={() => setViewAttendance(false)}
-                  >
-                    Back to Main
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+                    <div className="mb-3">
+                      <label className="form-label-custom">Capture Photos</label>
+                      <div className="p-3 border rounded">
+                        {currentLabelIndex < requiredPhotosCheckout.length ? (
+                          <>
+                            <div className="d-flex align-items-center mb-3 p-3">
+                              <FaCamera size={40} color="var(--ui-orange)" className="me-3" />
+                              <h5 className="mb-0">{requiredPhotosCheckout[currentLabelIndex]}</h5>
+                            </div>
+                            <div className="camera-preview-container mb-3 position-relative">
+                              {loading && (<div className="spinner-overlay d-flex justify-content-center align-items-center">
+                                <div className="spinner-border" style={{ color: "var(--ui-orange)" }} role="status"></div>
+                              </div>)}
+                              <video ref={videoRef} autoPlay playsInline></video>
+                              <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
+                            </div>
+                            <div className="d-flex justify-content-between mb-3">
+                              <button className="btn btn-secondary-custom btn-sm" onClick={toggleCameraFacingMode} disabled={loading}>
+                                Switch Camera ({cameraFacingMode === "environment" ? "Back" : "Front"})
+                              </button>
+                              <button className="btn btn-orange-custom" onClick={capturePhoto} disabled={loading}>
+                                {loading ? "Capturing..." : "Capture Photo"}
+                              </button>
+                            </div>
+                          </>
+                        ) : (<p className="text-success fw-bold"><FaCheckCircle className="me-2" /> All photos captured</p>)}
+                        <div className="photo-grid mt-4">
+                          {photos.map((p, i) => (
+                            <div key={i} className="photo-item card p-2 mb-3">
+                              <div className="photo-label">{p.label}</div>
+                              <img src={p.data} alt={p.label} className="img-fluid rounded" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
 
-      <footer className="footer mt-auto py-3 text-center text-dark" style={{ backgroundColor: "#e3f2fd" }}>
-        <p className="m-0">&copy; 2024 Nectar Infotel. All rights reserved.</p>
-      </footer>
-    </div>
+                    <button className="btn btn-orange-custom w-100 mt-3" onClick={handleCheckoutSubmission} disabled={
+                      photos.length < requiredPhotosCheckout.length || loading || INVALID_LOCATIONS.includes(locationName) || (checkedInAsSEWithMeter && !bikeMeterReadingCheckout)
+                    }>
+                      {loading ? "Submitting..." : "Submit Check-out"}
+                    </button>
+                    <button className="btn btn-secondary-custom w-100 mt-2" onClick={() => { setShowAttendancePanel(false); setShowCheckinCheckoutSelection(true); }} disabled={loading}>Back</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* View Attendance Panel */}
+            {viewAttendance && (
+              <motion.div key="history-panel" className="row justify-content-center"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
+                <div className="col-md-12">
+                  <div className="card panel-card">
+                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Attendance Submission History</h4>
+                    <SubmissionTable erpId={user?.email || userERPId} />
+                    <button className="btn btn-secondary-custom w-100 mt-3" onClick={() => setViewAttendance(false)}>Back</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+
+        <footer className="py-3 text-center text-dark" style={{ backgroundColor: "var(--ui-dashboard-bg)" }}>
+          <p className="m-0">&copy; {new Date().getFullYear()} AI-HRMS. All rights reserved.</p>
+        </footer>
+      </div>
+    </>
   );
 };
 

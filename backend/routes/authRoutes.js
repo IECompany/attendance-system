@@ -1,28 +1,28 @@
-// Attandance System/backend/routes/authRoutes.js - UPDATED for Login without explicit Company ID in request
+// Attandance System/backend/routes/authRoutes.js - UPDATED for multi-tenant login
 
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const rateLimit = require('express-rate-limit'); // Import rate-limit
+const rateLimit = require('express-rate-limit');
 
 // JWT Secret from environment variable (CRITICAL: Ensure this is set)
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '1d'; // Token expires in 1 day
+const JWT_EXPIRES_IN = '1d';
 
 if (!JWT_SECRET) {
     console.error("JWT_SECRET is not defined in environment variables!");
-    process.exit(1); // Exit if JWT secret is not defined
+    process.exit(1);
 }
 
 // Rate limiting middleware
 const loginLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour window
-    max: 5, // limit each IP to 5 login requests per windowMs
+    windowMs: 60 * 60 * 1000,
+    max: 5,
     message: "Too many login attempts from this IP, please try again after an hour",
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // Function to generate JWT
@@ -51,20 +51,18 @@ router.post("/register", async (req, res) => {
             return res.status(400).json({ message: "User with this email already exists in this company." });
         }
 
-        // 2. Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 3. Create new user
+        // 2. Create new user
+        // Mongoose pre-save hook will hash the password
         const newUser = new User({
-            companyId, // Assign companyId
+            companyId,
             name,
             email,
-            password: hashedPassword,
-            userType: 'user' // Default user type
+            password, 
+            userType: 'user'
         });
         await newUser.save();
 
-        // 4. Generate token and send response
+        // 3. Generate token and send response
         const token = generateToken(newUser._id, newUser.companyId);
         res.status(201).json({
             message: "User registered successfully.",
@@ -83,8 +81,8 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// POST /login - Authenticates user (without requiring companyId in request body)
-router.post("/login", loginLimiter, async (req, res) => { // Apply rate limiter to login
+// POST /login - Authenticates user without requiring companyId in request body
+router.post("/login", loginLimiter, async (req, res) => {
     const { loginId, password } = req.body;
 
     try {
@@ -92,35 +90,53 @@ router.post("/login", loginLimiter, async (req, res) => { // Apply rate limiter 
             return res.status(400).json({ message: "Please provide login ID and password" });
         }
 
-        // 1. Find user by email or pacsId (globally unique assumption)
-        const user = await User.findOne({
-            $or: [{ email: loginId }, { pacsId: loginId }],
+        // 1. Find all users matching the loginId, regardless of their company.
+        // I have corrected 'pacsId' to 'employeeId' as per your model.
+        const users = await User.find({
+            $or: [
+                { email: loginId },
+                { personalEmail: loginId },
+                { professionalEmail: loginId },
+                { employeeId: loginId }, 
+            ],
         });
 
-        if (!user) {
-            return res.status(400).json({ message: "Invalid credentials" }); // Generic message
+        // 2. If no user is found with that loginId
+        if (users.length === 0) {
+            return res.status(400).json({ message: "Invalid credentials." });
         }
 
-        // 2. Compare provided password with hashed password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" }); // Generic message
+        // 3. Iterate through the found users and check the password.
+        let authenticatedUser = null;
+        for (const user of users) {
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (isMatch) {
+                authenticatedUser = user;
+                break; // Exit the loop once a match is found
+            }
         }
+        
+        // 4. If no user was authenticated
+        if (!authenticatedUser) {
+            return res.status(400).json({ message: "Invalid credentials." });
+        }
+        
+        // 5. Generate JWT for the authenticated user
+        const token = generateToken(authenticatedUser._id, authenticatedUser.companyId);
 
-        // 3. If authentication successful, generate token
-        const token = generateToken(user._id, user.companyId);
-
-        // 4. Return user details including companyId and token
+        // 6. Send success response with user data
         res.status(200).json({
             message: "Login successful",
             token,
             user: {
-                userId: user._id,
-                name: user.name,
-                email: user.email,
-                pacsId: user.pacsId,
-                userType: user.userType,
-                companyId: user.companyId,
+                userId: authenticatedUser._id,
+                name: authenticatedUser.name,
+                email: authenticatedUser.email,
+                personalEmail: authenticatedUser.personalEmail,
+                professionalEmail: authenticatedUser.professionalEmail,
+                employeeId: authenticatedUser.employeeId,
+                userType: authenticatedUser.userType,
+                companyId: authenticatedUser.companyId,
             },
         });
     } catch (err) {

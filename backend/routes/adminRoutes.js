@@ -1,7 +1,7 @@
 // backend/routes/adminRoutes.js - FINAL VERSION with role-based access + company isolation
 const express = require("express");
 const router = express.Router();
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const Visit = require("../models/Visit"); // <-- NEW: Import the Visit model
 const { protect, authorize } = require("../middleware/companyAuth");

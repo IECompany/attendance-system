@@ -1,11 +1,14 @@
-// components/SubmissionTable.js - UPDATED for Multi-Tenancy
+// components/SubmissionTable.js - FINAL VERSION
 
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+import { useAuth } from '../authContext';
+
+// --- NEW: Use environment variable for API base URL ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const SubmissionTable = ({ erpId }) => {
-  const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+  const { user, token, logout } = useAuth();
 
   const [visits, setVisits] = useState([]); 
   const [loading, setLoading] = useState(false);
@@ -14,42 +17,44 @@ const SubmissionTable = ({ erpId }) => {
   // --- NEW: Helper to get authenticated headers ---
   const getAuthHeaders = useCallback(() => {
     if (!token || !user || !user.companyId) {
-      // If token or companyId is missing, it means user is not properly authenticated
-      // or session is invalid. Redirect to login.
-      setError("Session expired or invalid. Please log in again."); // Set error message
-      logout(); // Use logout function from context to clear session and redirect
+      setError("Session expired or invalid. Please log in again.");
+      logout();
       return null;
     }
     return {
       'Authorization': `Bearer ${token}`,
       'X-Company-ID': user.companyId
     };
-  }, [token, user, logout]); // Dependencies for useCallback
+  }, [token, user, logout]);
 
   useEffect(() => {
     // Function to fetch visits for the current user within their company
     const fetchVisits = async () => {
-      // Ensure we have an ERP ID (user's login ID) to fetch visits for
       if (!erpId) {
         setError('Please log in with your ERP ID to view your visit history.');
         setVisits([]);
         return;
       }
+      
+      // Check for API URL configuration
+      if (!API_BASE_URL) {
+          setError("Configuration error: API base URL is not defined.");
+          setLoading(false);
+          return;
+      }
 
-      const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
+      const headers = getAuthHeaders();
       if (!headers) {
-        // getAuthHeaders already handles error/logout, so just return here
         return;
       }
 
       setLoading(true);
-      setError(null); // Clear any previous errors
+      setError(null);
 
       try {
-        // Fetch visits for the specific erpId and within the authenticated companyId
-        const response = await fetch(`http://localhost:5001/api/submissions/${erpId}`, {
+        const response = await fetch(`${API_BASE_URL}/submissions/${erpId}`, {
           method: 'GET',
-          headers: headers // <-- NEW: Pass authentication headers
+          headers: headers
         });
         
         const contentType = response.headers.get("content-type");
@@ -69,16 +74,14 @@ const SubmissionTable = ({ erpId }) => {
       }
     };
 
-    // Only fetch visits if user and token are available (meaning authenticated)
     if (user && token && user.companyId) {
       fetchVisits();
     } else {
-      // If not authenticated, ensure visits are cleared and error is set
       setVisits([]);
       setLoading(false);
       setError("Not authenticated. Please log in to view your submission history.");
     }
-  }, [erpId, user, token, getAuthHeaders]); // Add user, token, and getAuthHeaders to dependencies
+  }, [erpId, user, token, getAuthHeaders]);
 
   const formatDateTime = (dateString) => {
     try {
@@ -161,7 +164,6 @@ const SubmissionTable = ({ erpId }) => {
                     ) : 'No Photos'}
                   </td>
                   <td>
-                    {/* Assuming checkout.photos is an array now, similar to checkin.photos */}
                     {visit.checkout && visit.checkout.photos && visit.checkout.photos.length > 0 ? (
                       visit.checkout.photos.map((photo, index) => (
                         <a key={index} href={photo.url} target="_blank" rel="noopener noreferrer" className="me-1">

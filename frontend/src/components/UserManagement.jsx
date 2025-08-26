@@ -1,4 +1,4 @@
-// src/components/UserManagement.jsx - UPDATED for Multi-Tenancy
+// src/components/UserManagement.jsx - FINAL VERSION
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
@@ -6,6 +6,9 @@ import { Table, Form, Button, Spinner, Alert, Pagination } from 'react-bootstrap
 import { FaSearch, FaTrash, FaUsers } from 'react-icons/fa';
 
 import { useAuth } from '../authContext';
+
+// --- NEW: Use environment variable for API base URL ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const UserManagement = () => {
     const { user, token, logout } = useAuth();
@@ -19,8 +22,6 @@ const UserManagement = () => {
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(false);
-
-    const API_BASE_URL = 'http://localhost:5001/api/admin';
 
     // Helper to get authenticated headers
     const getAuthHeaders = useCallback(() => {
@@ -40,6 +41,13 @@ const UserManagement = () => {
             setLoading(false);
             return;
         }
+        
+        // Check for API URL configuration
+        if (!API_BASE_URL) {
+            setError("Configuration error: API base URL is not defined.");
+            setLoading(false);
+            return;
+        }
 
         const fetchUsers = async () => {
             const headers = getAuthHeaders();
@@ -51,7 +59,7 @@ const UserManagement = () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await axios.get(`${API_BASE_URL}/users`, {
+                const response = await axios.get(`${API_BASE_URL}/admin/users`, {
                     params: {
                         page,
                         limit,
@@ -77,10 +85,15 @@ const UserManagement = () => {
         if (window.confirm(`Are you sure you want to delete user "${userName}" (ID: ${userId})? This action cannot be undone.`)) {
             const headers = getAuthHeaders();
             if (!headers) return;
+            
+            if (!API_BASE_URL) {
+                setError("Configuration error: API base URL is not defined.");
+                return;
+            }
 
             try {
                 setLoading(true);
-                await axios.delete(`${API_BASE_URL}/users/${userId}`, {
+                await axios.delete(`${API_BASE_URL}/admin/users/${userId}`, {
                     headers: headers
                 });
                 setRefreshTrigger(prev => !prev);
@@ -94,7 +107,7 @@ const UserManagement = () => {
         }
     };
 
-    // ✅ Helper function to generate password from name and DOB string
+    // Helper function to generate password from name and DOB string
     const generatePasswordFromNameAndDOB = (name, dobString) => {
         if (!name || !dobString || typeof name !== 'string' || typeof dobString !== 'string') {
             return 'N/A';

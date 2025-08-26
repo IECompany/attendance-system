@@ -8,10 +8,11 @@ import { toast } from 'react-toastify';
 import Loader from './Loader';
 import Message from './Message';
 import { useAuth } from '../authContext';
-// NEW: Import the PDF printing hook
 import { useReactToPrint } from 'react-to-print';
-// NEW: Import the Salary Slip component (you'll need to create this file)
 import SalarySlipTemplate from './SalarySlipTemplate';
+
+// --- NEW: Use environment variable for API base URL ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const EmployeeSalaryInformation = () => {
     const { user, token, logout } = useAuth();
@@ -43,7 +44,6 @@ const EmployeeSalaryInformation = () => {
         incentive: ''
     });
 
-    // NEW STATE FOR PDF
     const [selectedEmployeeForPdf, setSelectedEmployeeForPdf] = useState(null);
     const [showPrintableComponent, setShowPrintableComponent] = useState(false);
     const componentRef = useRef();
@@ -77,10 +77,16 @@ const EmployeeSalaryInformation = () => {
             return;
         }
 
+        if (!API_BASE_URL) {
+            setError("Configuration error: API base URL is not defined.");
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         setError(null);
         try {
-            const { data } = await axios.get(`http://localhost:5001/api/admin/employees-salary-info?month=${month}&year=${year}`, {
+            const { data } = await axios.get(`${API_BASE_URL}/admin/employees-salary-info?month=${month}&year=${year}`, {
                 headers: headers,
                 withCredentials: true,
             });
@@ -183,6 +189,12 @@ const EmployeeSalaryInformation = () => {
             return;
         }
 
+        if (!API_BASE_URL) {
+            toast.error("Configuration error: API base URL is not defined.");
+            setIsUpdating(false);
+            return;
+        }
+
         try {
             const dataToSend = {
                 ...formData,
@@ -198,7 +210,7 @@ const EmployeeSalaryInformation = () => {
                 reimbursements: formData.reimbursements.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
             };
 
-            await axios.put(`http://localhost:5001/api/admin/employees-salary-info/${editingEmployee._id}`, dataToSend, {
+            await axios.put(`${API_BASE_URL}/admin/employees-salary-info/${editingEmployee._id}`, dataToSend, {
                 headers: headers,
                 withCredentials: true,
             });
@@ -223,9 +235,15 @@ const EmployeeSalaryInformation = () => {
             setIsUpdatingLeave(false);
             return;
         }
+        
+        if (!API_BASE_URL) {
+            toast.error("Configuration error: API base URL is not defined.");
+            setIsUpdatingLeave(false);
+            return;
+        }
 
         try {
-            const response = await axios.put(`http://localhost:5001/api/admin/salaries/update-leave/${editingEmployee.user._id}`, { leavesRemaining: parseInt(newLeavesRemaining) }, { headers });
+            const response = await axios.put(`${API_BASE_URL}/admin/salaries/update-leave/${editingEmployee.user._id}`, { leavesRemaining: parseInt(newLeavesRemaining) }, { headers });
             toast.success(response.data.message);
             setEmployeesSalary(prev => prev.map(emp => 
                 emp._id === editingEmployee._id 
@@ -241,20 +259,18 @@ const EmployeeSalaryInformation = () => {
         }
     };
     
-    // NEW: PDF Printing Logic
     const handlePrint = useReactToPrint({
         content: () => componentRef.current,
         documentTitle: `Salary_Slip_${selectedEmployeeForPdf?.pacsId}_${months[selectedMonth - 1]?.label}_${selectedYear}`,
     });
 
-    // UPDATED generatePdf function
     const generatePdf = (employee) => {
         setSelectedEmployeeForPdf(employee);
-        setShowPrintableComponent(true); // Component render karna shuru karo
+        setShowPrintableComponent(true);
 
         setTimeout(() => {
             handlePrint().then(() => {
-                setShowPrintableComponent(false); // Print hone ke baad component ko hata do
+                setShowPrintableComponent(false);
             });
         }, 100);
     };
@@ -375,7 +391,6 @@ const EmployeeSalaryInformation = () => {
                                                 <button className="btn btn-sm btn-info" onClick={() => openEditModal(employee)}>
                                                     <FaEdit /> Edit
                                                 </button>
-                                                {/* NEW: PDF Download Button */}
                                                 <button className="btn btn-sm btn-danger mt-1" onClick={() => generatePdf(employee)}>
                                                     <FaFilePdf /> PDF
                                                 </button>
@@ -389,7 +404,6 @@ const EmployeeSalaryInformation = () => {
                 )}
             </div>
 
-            {/* UPDATED: Conditional Rendering for PDF Component */}
             {showPrintableComponent && (
                 <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
                     <SalarySlipTemplate 
@@ -528,17 +542,19 @@ const EmployeeSalaryInformation = () => {
                                                         <>
                                                             <FaSpinner className="me-2" /> Updating...
                                                         </>
-                                                    ) : 'Update Leaves'}
+                                                    ) : (
+                                                        'Update Leaves'
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" onClick={closeEditModal}>Close</button>
-                                    <button type="submit" className="btn btn-primary" disabled={isUpdating}>
-                                        {isUpdating ? <FaSpinner className="spinner-border spinner-border-sm me-2" /> : ''} Update Details
-                                    </button>
+                                <div className="modal-footer d-flex justify-content-between">
+                                    <Button variant="secondary" onClick={closeEditModal}>Close</Button>
+                                    <Button variant="primary" type="submit" disabled={isUpdating}>
+                                        {isUpdating ? <><FaSpinner className="me-2" /> Saving...</> : 'Save Changes'}
+                                    </Button>
                                 </div>
                             </form>
                         </div>

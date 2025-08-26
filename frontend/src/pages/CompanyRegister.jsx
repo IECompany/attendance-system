@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import Message from '../components/Message';
 import { FaBuilding, FaUserTie, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
+// The API base URL is now dynamically loaded from the environment variables.
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const CompanyRegister = () => {
   const [formData, setFormData] = useState({
     companyName: '',
@@ -19,8 +22,6 @@ const CompanyRegister = () => {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const API_BASE_URL = "http://localhost:5001/api";
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,6 +49,11 @@ const CompanyRegister = () => {
     }
     if (!formData.companyContactNo) {
       setMessage({ type: 'error', text: 'Company Contact Number is required.' });
+      setLoading(false);
+      return;
+    }
+    if (!API_BASE_URL) {
+      setMessage({ type: 'error', text: 'API base URL is not configured. Please check your .env file.' });
       setLoading(false);
       return;
     }

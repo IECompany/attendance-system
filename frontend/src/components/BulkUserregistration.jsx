@@ -5,6 +5,9 @@ import * as XLSX from "xlsx";
 import { Alert, Spinner, Button, Nav, Tabs, Tab, Form, Row, Col } from "react-bootstrap";
 import { useAuth } from '../authContext';
 
+// --- NEW: Use environment variable for API base URL ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const BulkUserRegistration = () => {
   const { user, token, logout } = useAuth();
   const [key, setKey] = useState('bulk'); // State for managing tabs
@@ -69,6 +72,12 @@ const BulkUserRegistration = () => {
       setBulkVariant("warning");
       return;
     }
+    
+    if (!API_BASE_URL) {
+      setBulkMessage("Configuration error: API base URL is not defined.");
+      setBulkVariant("danger");
+      return;
+    }
 
     const headers = getAuthHeaders(true); // isMultipart = true
     if (!headers) return;
@@ -81,7 +90,7 @@ const BulkUserRegistration = () => {
       const formData = new FormData();
       formData.append("excelFile", file);
 
-      const res = await fetch("http://localhost:5001/api/admin/bulk-register-users", {
+      const res = await fetch(`${API_BASE_URL}/admin/bulk-register-users`, {
         method: "POST",
         headers: {
           'Authorization': headers.Authorization,
@@ -144,6 +153,12 @@ const BulkUserRegistration = () => {
     e.preventDefault();
     const headers = getAuthHeaders();
     if (!headers) return;
+    
+    if (!API_BASE_URL) {
+      setSingleMessage("Configuration error: API base URL is not defined.");
+      setSingleVariant("danger");
+      return;
+    }
 
     setSingleMessage("");
     setSingleVariant("");
@@ -151,7 +166,7 @@ const BulkUserRegistration = () => {
     setGeneratedPassword("");
 
     try {
-      const res = await fetch("http://localhost:5001/api/admin/register-single-user", {
+      const res = await fetch(`${API_BASE_URL}/admin/register-single-user`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(formData),

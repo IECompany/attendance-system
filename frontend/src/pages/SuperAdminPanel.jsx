@@ -35,6 +35,8 @@ const SuperAdminLogo = () => (
   </svg>
 );
 
+// --- API Base URL is now dynamic ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const SuperAdminPanel = () => {
   const { user, token, logout } = useAuth();
@@ -66,6 +68,13 @@ const SuperAdminPanel = () => {
   const [showAddStateInput, setShowAddStateInput] = useState(false);
   const [tempNewStateName, setTempNewStateName] = useState("");
 
+  // Check if API_BASE_URL is configured
+  useEffect(() => {
+    if (!API_BASE_URL) {
+      setError("Configuration error: API base URL is not defined in the environment variables.");
+    }
+  }, []);
+
   const getAuthHeaders = useCallback(() => {
     if (!token || !user || !user.companyId) {
       alert("Session expired or invalid. Please log in again.");
@@ -78,11 +87,16 @@ const SuperAdminPanel = () => {
     };
   }, [token, user, logout]);
 
-  // --- NEW: Function to handle adding a new state ---
+  // --- UPDATED: Function to handle adding a new state ---
   const handleAddState = async (e) => {
     e.preventDefault();
     if (!tempNewStateName.trim()) {
       alert("Please enter a state name.");
+      return;
+    }
+    
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
       return;
     }
 
@@ -90,7 +104,7 @@ const SuperAdminPanel = () => {
     if (!headers) return;
 
     try {
-      const res = await fetch("http://localhost:5001/api/states", {
+      const res = await fetch(`${API_BASE_URL}/states`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,8 +130,10 @@ const SuperAdminPanel = () => {
 
 
   useEffect(() => {
-    if (!user || !token || !user.companyId) {
-      logout();
+    if (!user || !token || !user.companyId || !API_BASE_URL) {
+      if (!API_BASE_URL) {
+        setError("Configuration error: API base URL is not defined.");
+      }
       return;
     }
 
@@ -127,7 +143,7 @@ const SuperAdminPanel = () => {
     // --- UPDATED: Moved state fetching into a separate function for reusability ---
     const fetchStates = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/states", { headers });
+        const res = await fetch(`${API_BASE_URL}/states`, { headers });
         const data = await res.json();
         if (res.ok) {
           setAvailableStates(data.sort());
@@ -141,7 +157,7 @@ const SuperAdminPanel = () => {
     
     const fetchUniqueDates = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/admin/unique-checkin-dates", { headers });
+        const res = await fetch(`${API_BASE_URL}/admin/unique-checkin-dates`, { headers });
         const data = await res.json();
         if (res.ok) {
           setAvailableDates(data.sort().reverse());
@@ -155,7 +171,7 @@ const SuperAdminPanel = () => {
     
     const fetchOffices = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/offices", { headers });
+        const res = await fetch(`${API_BASE_URL}/offices`, { headers });
         const data = await res.json();
         if (res.ok) {
           setAvailableOffices(data.sort((a, b) => a.name.localeCompare(b.name)));
@@ -177,11 +193,15 @@ const SuperAdminPanel = () => {
       const fetchAllVisits = async () => {
         const headers = getAuthHeaders();
         if (!headers) return;
+        if (!API_BASE_URL) {
+          setError("Configuration error: API base URL is not defined.");
+          return;
+        }
 
         setLoading(true);
         setError(null);
         try {
-          const response = await fetch(`http://localhost:5001/api/admin/visits`, { headers });
+          const response = await fetch(`${API_BASE_URL}/admin/visits`, { headers });
           const contentType = response.headers.get("content-type");
           if (!response.ok || (contentType && !contentType.includes("application/json"))) {
             const errorText = await response.text();
@@ -206,6 +226,11 @@ const SuperAdminPanel = () => {
     setError(null);
     const headers = getAuthHeaders();
     if (!headers) {
+      setDownloadLoading(false);
+      return;
+    }
+    if (!API_BASE_URL) {
+      setError("Configuration error: API base URL is not defined.");
       setDownloadLoading(false);
       return;
     }
@@ -239,11 +264,11 @@ const SuperAdminPanel = () => {
     }
   };
 
-  const handleDownloadEntireDataset = () => { downloadCsv("http://localhost:5001/api/admin/download-submissions", "all_submissions.csv"); };
-  const handleDownloadStatewiseDataset = () => { if (!downloadState) { alert("Please select a State."); return; } const query = new URLSearchParams({ state: downloadState }).toString(); downloadCsv(`http://localhost:5001/api/admin/download-submissions?${query}`, `submissions_state_${downloadState}.csv`); };
-  const handleDownloadOfficewiseDataset = () => { if (!downloadOffice) { alert("Please select an Office."); return; } const query = new URLSearchParams({ officeId: downloadOffice }).toString(); downloadCsv(`http://localhost:5001/api/admin/download-submissions?${query}`, `submissions_office_${downloadOffice}.csv`); };
-  const handleDownloadDatewiseDataset = () => { if (!downloadDate) { alert("Please select a Date."); return; } const query = new URLSearchParams({ date: downloadDate }).toString(); downloadCsv(`http://localhost:5001/api/admin/download-submissions?${query}`, `submissions_date_${downloadDate}.csv`); };
-  const handleDownloadStatuswiseDataset = () => { if (!downloadStatus) { alert("Please select a Status (Active/Completed)."); return; } const query = new URLSearchParams({ status: downloadStatus }).toString(); downloadCsv(`http://localhost:5001/api/admin/download-submissions?${query}`, `submissions_status_${downloadStatus}.csv`); };
+  const handleDownloadEntireDataset = () => { downloadCsv(`${API_BASE_URL}/admin/download-submissions`, "all_submissions.csv"); };
+  const handleDownloadStatewiseDataset = () => { if (!downloadState) { alert("Please select a State."); return; } const query = new URLSearchParams({ state: downloadState }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_state_${downloadState}.csv`); };
+  const handleDownloadOfficewiseDataset = () => { if (!downloadOffice) { alert("Please select an Office."); return; } const query = new URLSearchParams({ officeId: downloadOffice }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_office_${downloadOffice}.csv`); };
+  const handleDownloadDatewiseDataset = () => { if (!downloadDate) { alert("Please select a Date."); return; } const query = new URLSearchParams({ date: downloadDate }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_date_${downloadDate}.csv`); };
+  const handleDownloadStatuswiseDataset = () => { if (!downloadStatus) { alert("Please select a Status (Active/Completed)."); return; } const query = new URLSearchParams({ status: downloadStatus }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_status_${downloadStatus}.csv`); };
 
   const handleAdminRegister = async (e) => {
     e.preventDefault();
@@ -251,9 +276,13 @@ const SuperAdminPanel = () => {
 
     const headers = getAuthHeaders();
     if (!headers) return;
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
+      return;
+    }
 
     try {
-      const res = await fetch("http://localhost:5001/api/admin/register", {
+      const res = await fetch(`${API_BASE_URL}/admin/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -273,9 +302,13 @@ const SuperAdminPanel = () => {
 
     const headers = getAuthHeaders();
     if (!headers) return;
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
+      return;
+    }
 
     try {
-      const res = await fetch("http://localhost:5001/api/offices", {
+      const res = await fetch(`${API_BASE_URL}/offices`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -295,9 +328,13 @@ const SuperAdminPanel = () => {
 
     const headers = getAuthHeaders();
     if (!headers) return;
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
+      return;
+    }
 
     try {
-      const res = await fetch("http://localhost:5001/api/occupations", {
+      const res = await fetch(`${API_BASE_URL}/occupations`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

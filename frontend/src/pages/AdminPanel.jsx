@@ -3,7 +3,6 @@ import {
   FaDownload,
   FaMapMarkedAlt,
   FaClipboardList,
-  FaFilter,
   FaRedo
 } from "react-icons/fa";
 import { motion } from "framer-motion";
@@ -11,6 +10,10 @@ import { Spinner, Alert, Form, Row, Col, Button } from 'react-bootstrap';
 import AdminVisitsTable from "../components/AdminVisitsTable";
 
 import { useAuth } from '../authContext';
+
+// The API base URL is now dynamically loaded from the environment variables.
+// Ensure you have a .env file with REACT_APP_API_BASE_URL=http://localhost:5001
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const AdminPanel = () => {
   const { user, token, logout } = useAuth();
@@ -60,8 +63,13 @@ const AdminPanel = () => {
 
     const headers = getAuthHeaders();
     if (!headers) return;
+    if (!API_BASE_URL) {
+      console.error("API_BASE_URL environment variable is not defined.");
+      setError("Configuration error: API base URL is missing.");
+      return;
+    }
 
-    fetch("http://localhost:5001/api/admin/unique-districts", { headers })
+    fetch(`${API_BASE_URL}/admin/unique-districts`, { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -69,7 +77,7 @@ const AdminPanel = () => {
       .then(setDistrictList)
       .catch((err) => console.error("❌ Failed to fetch districts:", err));
 
-    fetch("http://localhost:5001/api/admin/unique-states", { headers })
+    fetch(`${API_BASE_URL}/admin/unique-states`, { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -77,7 +85,7 @@ const AdminPanel = () => {
       .then(setStateList)
       .catch((err) => console.error("❌ Failed to fetch states:", err));
 
-    fetch("http://localhost:5001/api/admin/unique-checkin-dates", { headers })
+    fetch(`${API_BASE_URL}/admin/unique-checkin-dates`, { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -90,6 +98,10 @@ const AdminPanel = () => {
     const fetchVisitsForTable = async () => {
       if (!user || !token || !user.companyId) {
         logout();
+        return;
+      }
+      if (!API_BASE_URL) {
+        setError("Configuration error: API base URL is missing.");
         return;
       }
 
@@ -106,7 +118,7 @@ const AdminPanel = () => {
         if (tableDateFilter) queryParams.append("date", tableDateFilter);
         if (tableStatusFilter) queryParams.append("status", tableStatusFilter);
 
-        const url = `http://localhost:5001/api/admin/visits?${queryParams.toString()}`;
+        const url = `${API_BASE_URL}/admin/visits?${queryParams.toString()}`;
         const res = await fetch(url, { headers });
         
         if (!res.ok) {
@@ -170,11 +182,11 @@ const AdminPanel = () => {
       return;
     }
     const query = new URLSearchParams({ district, state, date }).toString();
-    downloadCsv(`http://localhost:5001/api/admin/download-submissions?${query}`, "filtered_submissions.csv");
+    downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, "filtered_submissions.csv");
   };
 
   const handleDownloadAll = () => {
-    downloadCsv("http://localhost:5001/api/admin/download-submissions", "all_submissions.csv");
+    downloadCsv(`${API_BASE_URL}/admin/download-submissions`, "all_submissions.csv");
   };
 
   const handleDownloadByErpId = () => {
@@ -182,7 +194,7 @@ const AdminPanel = () => {
       alert("Please enter ERP ID to download.");
       return;
     }
-    downloadCsv(`http://localhost:5001/api/admin/download-submissions/${erpIdDownload}`, `${erpIdDownload}_submissions.csv`);
+    downloadCsv(`${API_BASE_URL}/admin/download-submissions/${erpIdDownload}`, `${erpIdDownload}_submissions.csv`);
   };
 
   return (

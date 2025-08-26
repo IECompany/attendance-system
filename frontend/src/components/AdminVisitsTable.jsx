@@ -9,6 +9,9 @@ import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa';
 
 import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
 
+// --- NEW: Use environment variable for API base URL ---
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 const AdminVisitsTable = ({ visits, loading, error }) => {
   const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
 
@@ -169,10 +172,14 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
   const downloadSinglePhoto = async (photoUrl, filename) => {
     const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
     if (!headers) return; // Exit if headers are not available
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
+      return;
+    }
 
     try {
       // Use the backend proxy route for image download, passing headers
-      const response = await fetch(`http://localhost:5001/api/download-image?url=${encodeURIComponent(photoUrl)}`, {
+      const response = await fetch(`${API_BASE_URL}/download-image?url=${encodeURIComponent(photoUrl)}`, {
         method: 'GET',
         headers: headers // <-- NEW: Pass authentication headers to the proxy
       });
@@ -194,6 +201,10 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
 
     const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
     if (!headers) return; // Exit if headers are not available
+    if (!API_BASE_URL) {
+      alert("Configuration error: API base URL is not defined.");
+      return;
+    }
 
     const zip = new JSZip();
     const folderName = `${selectedVisitErpId || 'visit'}_all_photos`;
@@ -202,7 +213,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
     const downloadPromises = selectedVisitPhotos.map(async (photo) => {
       try {
         // Use the backend proxy route for image download, passing headers
-        const response = await fetch(`http://localhost:5001/api/download-image?url=${encodeURIComponent(photo.url)}`, {
+        const response = await fetch(`${API_BASE_URL}/download-image?url=${encodeURIComponent(photo.url)}`, {
           method: 'GET',
           headers: headers // <-- NEW: Pass authentication headers to the proxy
         });

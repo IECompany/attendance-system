@@ -25,11 +25,19 @@ const Dashboard = () => {
     setLoading(true);
     setErrorMessage("");
 
-    const API_BASE_URL = "http://localhost:5001/api";
+    // Use environment variable for the base URL
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    
+    // Add a check to ensure the URL is configured
+    if (!API_BASE_URL) {
+      setErrorMessage("API base URL is not configured. Please check your .env file.");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isLogin) {
-        const res = await fetch(`${API_BASE_URL}/login`, {
+        const res = await fetch(`${API_BASE_URL}/api/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ loginId, password }),
@@ -76,7 +84,7 @@ const Dashboard = () => {
 
         const tempCompanyId = "60c72b2f9b1e8e001c8e8e8e"; // Placeholder - REPLACE with actual logic
 
-        const res = await fetch(`${API_BASE_URL}/register`, {
+        const res = await fetch(`${API_BASE_URL}/api/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email: loginId, password, companyId: tempCompanyId }),

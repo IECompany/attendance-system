@@ -10,10 +10,12 @@ const app = express();
 const cors = require("cors");
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",          // local dev
+    "https://hrms-live.onrender.com"  // deployed frontend
+  ],
   credentials: true,
 }));
-
 app.use(express.json({ limit: "10mb" }));
 
 // Import Routes

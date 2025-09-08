@@ -9,8 +9,22 @@ const app = express();
 
 const cors = require("cors");
 
+// Define a list of allowed origins for CORS
+const allowedOrigins = [
+  "http://localhost:5173", // For local development
+  "https://hrms-live.onrender.com" // For production deployment
+];
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -19,7 +33,7 @@ app.use(express.json({ limit: "10mb" }));
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
-const adminRoutes = require("./routes/adminRoutes"); // <-- YOUR route
+const adminRoutes = require("./routes/adminRoutes");
 const adminDataDownloadFilter = require("./routes/adminDataDownloadFilter");
 const officeRoutes = require("./routes/officeRoutes");
 const stateRoutes = require("./routes/stateRoutes");
@@ -40,7 +54,7 @@ app.use(protect); // ✅ All routes below this line are protected
 
 // Protected Routes
 app.use("/api", submissionRoutes);
-app.use("/api/admin", adminRoutes); // ✅ FIXED: Now matches the route expected by frontend
+app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminDataDownloadFilter);
 app.use("/api/offices", officeRoutes);
 app.use("/api", stateRoutes);

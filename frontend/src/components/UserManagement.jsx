@@ -7,6 +7,9 @@ import { FaSearch, FaTrash, FaUsers } from 'react-icons/fa';
 
 import { useAuth } from '../authContext';
 
+// Use an environment variable for the API URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api/admin";
+
 const UserManagement = () => {
     const { user, token, logout } = useAuth();
 
@@ -19,8 +22,6 @@ const UserManagement = () => {
     const [totalUsers, setTotalUsers] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(false);
-
-    const API_BASE_URL = 'http://localhost:5001/api/admin';
 
     // Helper to get authenticated headers
     const getAuthHeaders = useCallback(() => {

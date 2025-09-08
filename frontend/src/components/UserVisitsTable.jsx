@@ -4,7 +4,6 @@ import { Button, Modal, Image, Spinner, Alert, Table } from 'react-bootstrap';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
-// We add a default value of an empty array [] for userVisits
 const UserVisitsTable = ({ userVisits = [], loading, error, userOccupation }) => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedVisitPhotos, setSelectedVisitPhotos] = useState([]);
@@ -38,7 +37,7 @@ const UserVisitsTable = ({ userVisits = [], loading, error, userOccupation }) =>
     }
 
     setSelectedVisitPhotos(photos);
-    setSelectedVisitId(visit._id); // Using _id for user panel is fine
+    setSelectedVisitId(visit._id);
     setShowPhotoModal(true);
   };
 
@@ -132,12 +131,10 @@ const UserVisitsTable = ({ userVisits = [], loading, error, userOccupation }) =>
 
       {error && <Alert variant="danger" className="my-4">{error}</Alert>}
 
-      {/* This check now safely uses .length because userVisits is guaranteed to be an array */}
       {!loading && !error && userVisits.length === 0 && (
         <Alert variant="info" className="my-4">You have not submitted any visits yet.</Alert>
       )}
 
-      {/* This check also safely uses .length */}
       {!loading && !error && userVisits.length > 0 && (
         <div className="table-responsive">
           <Table striped bordered hover responsive className="mt-4 shadow-sm rounded">
@@ -156,7 +153,6 @@ const UserVisitsTable = ({ userVisits = [], loading, error, userOccupation }) =>
             </thead>
             <tbody>
               <AnimatePresence>
-                {/* .map is now safe because userVisits is guaranteed to be an array */}
                 {userVisits.map((visit) => {
                   const checkinMeter = parseFloat(visit.checkin?.bikeMeterReading);
                   const checkoutMeter = parseFloat(visit.checkout?.bikeMeterReading);
@@ -305,7 +301,6 @@ const UserVisitsTable = ({ userVisits = [], loading, error, userOccupation }) =>
         .table-responsive {
             overflow-x: auto;
         }
-        /* Photo Modal specific styles can be shared or defined here */
         .photo-modal-content .card-img-top {
           width: 100%;
           height: 150px;

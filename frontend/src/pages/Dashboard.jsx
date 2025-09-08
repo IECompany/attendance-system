@@ -4,6 +4,8 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../authContext";
 import { FaUserPlus, FaSignInAlt } from 'react-icons/fa'; // Import icons
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+
 const Dashboard = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
@@ -24,8 +26,6 @@ const Dashboard = () => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
-
-    const API_BASE_URL = "http://localhost:5001/api";
 
     try {
       if (isLogin) {

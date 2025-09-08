@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Message from '../components/Message';
 import { FaBuilding, FaUserTie, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+
 const CompanyRegister = () => {
   const [formData, setFormData] = useState({
     companyName: '',
@@ -19,8 +21,6 @@ const CompanyRegister = () => {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const API_BASE_URL = "http://localhost:5001/api";
 
   const handleChange = (e) => {
     const { name, value } = e.target;

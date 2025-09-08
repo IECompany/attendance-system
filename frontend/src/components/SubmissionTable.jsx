@@ -4,6 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react'; // Added useCal
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
 
+// Use an environment variable for the API URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+
 const SubmissionTable = ({ erpId }) => {
   const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
 
@@ -47,7 +50,7 @@ const SubmissionTable = ({ erpId }) => {
 
       try {
         // Fetch visits for the specific erpId and within the authenticated companyId
-        const response = await fetch(`http://localhost:5001/api/submissions/${erpId}`, {
+        const response = await fetch(`${API_BASE_URL}/submissions/${erpId}`, {
           method: 'GET',
           headers: headers // <-- NEW: Pass authentication headers
         });

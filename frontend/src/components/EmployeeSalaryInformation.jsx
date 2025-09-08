@@ -8,7 +8,9 @@ import Message from './Message';
 import { useAuth } from '../authContext';
 import { useReactToPrint } from 'react-to-print';
 import SalarySlipTemplate from './SalarySlipTemplate';
-import { Modal, Button, Form, InputNumber } from 'antd'; // Make sure to have antd installed
+import { Modal, Button, Form, InputNumber } from 'antd';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api/admin";
 
 const EmployeeSalaryInformation = () => {
     const { user, token, logout } = useAuth();
@@ -37,8 +39,7 @@ const EmployeeSalaryInformation = () => {
         individualPaidLeaves: '',
         otherDeductions: [],
         reimbursements: [],
-        // UPDATED: Allowances is now an array
-        allowances: [], 
+        allowances: [],
         salaryDetailsConfigured: false,
     });
 
@@ -77,7 +78,7 @@ const EmployeeSalaryInformation = () => {
         setLoading(true);
         setError(null);
         try {
-            const { data } = await axios.get(`http://localhost:5001/api/admin/employees-salary-info?month=${month}&year=${year}`, {
+            const { data } = await axios.get(`${API_BASE_URL}/employees-salary-info?month=${month}&year=${year}`, {
                 headers: headers,
                 withCredentials: true,
             });
@@ -120,8 +121,7 @@ const EmployeeSalaryInformation = () => {
             individualPaidLeaves: currentIndividualLeaves ?? '',
             otherDeductions: employee.otherDeductions ? [...employee.otherDeductions] : [],
             reimbursements: employee.reimbursements ? [...employee.reimbursements] : [],
-            // UPDATED: Allowances is now an array
-            allowances: employee.allowances ? [...employee.allowances] : [], 
+            allowances: employee.allowances ? [...employee.allowances] : [],
             salaryDetailsConfigured: employee.salaryDetailsConfigured ?? false,
         });
         setShowEditModal(true);
@@ -134,8 +134,7 @@ const EmployeeSalaryInformation = () => {
             basicPay: '', salaryInHandPerMonth: '', pfDeduction: '', esiDeduction: '', professionalTax: '', incentivesBonus: '', individualPaidLeaves: '', otherDeductions: [], reimbursements: [], allowances: [], salaryDetailsConfigured: false,
         });
     };
-    
-    // Unified function to handle changes in any array field (otherDeductions, reimbursements, allowances)
+
     const handleArrayChange = (type, index, field, value) => {
         setFormData(prev => {
             const newArray = [...prev[type]];
@@ -143,7 +142,7 @@ const EmployeeSalaryInformation = () => {
             return { ...prev, [type]: newArray };
         });
     };
-    
+
     const addArrayItem = (type) => {
         setFormData(prev => {
             const newItem = type === 'allowances' ? { title: '', amount: 0 } : { title: '', amount: 0 };
@@ -151,7 +150,7 @@ const EmployeeSalaryInformation = () => {
             return { ...prev, [type]: newArray };
         });
     };
-    
+
     const removeArrayItem = (type, index) => {
         setFormData(prev => {
             const newArray = prev[type].filter((_, i) => i !== index);
@@ -180,7 +179,6 @@ const EmployeeSalaryInformation = () => {
                 incentivesBonus: formData.incentivesBonus === '' ? 0 : parseFloat(formData.incentivesBonus),
                 otherDeductions: formData.otherDeductions.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
                 reimbursements: formData.reimbursements.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
-                // UPDATED: Now sends an array of objects
                 allowances: formData.allowances.map(item => ({ ...item, amount: parseFloat(item.amount) || 0 })),
             };
 
@@ -192,7 +190,7 @@ const EmployeeSalaryInformation = () => {
                 dataToSend.individualPaidLeaves = null;
             }
 
-            await axios.put(`http://localhost:5001/api/admin/employees-salary-info/${editingEmployee._id}`, dataToSend, {
+            await axios.put(`${API_BASE_URL}/employees-salary-info/${editingEmployee._id}`, dataToSend, {
                 headers: headers,
                 withCredentials: true,
             });
@@ -206,7 +204,7 @@ const EmployeeSalaryInformation = () => {
             setIsUpdating(false);
         }
     };
-    
+
     const handleUpdateMonthlyLeaves = async () => {
         if (monthlyLeaves === '' || isNaN(monthlyLeaves) || parseFloat(monthlyLeaves) < 0) {
             return toast.error("Please enter a valid number for monthly leaves.");
@@ -221,7 +219,7 @@ const EmployeeSalaryInformation = () => {
 
         try {
             const response = await axios.put(
-                `http://localhost:5001/api/admin/salaries/update-monthly-leaves`,
+                `${API_BASE_URL}/salaries/update-monthly-leaves`,
                 { month: selectedMonth, year: selectedYear, leaves: parseFloat(monthlyLeaves) },
                 { headers }
             );
@@ -235,7 +233,7 @@ const EmployeeSalaryInformation = () => {
             setIsUpdating(false);
         }
     };
-    
+
     const handlePrintPdf = useReactToPrint({
         content: () => componentRef.current,
         documentTitle: `Salary_Slip_${selectedEmployeeForPdf?.employeeId}_${months[selectedMonth - 1]?.label}_${selectedYear}`,
@@ -322,7 +320,7 @@ const EmployeeSalaryInformation = () => {
                                     <th>In-Hand Salary</th>
                                     <th>PF/ESI/PT Deductions</th>
                                     <th>Incentives / Bonus</th>
-                                    <th>Allowances</th> {/* NEW COLUMN */}
+                                    <th>Allowances</th>
                                     <th>Public Leaves</th>
                                     <th>Used Paid Leaves</th>
                                     <th>Paid Days</th>
@@ -343,8 +341,8 @@ const EmployeeSalaryInformation = () => {
                                         <td>₹{(employee.basicPay ?? 0).toFixed(2)}</td>
                                         <td>₹{(employee.salaryInHandPerMonth ?? 0).toFixed(2)}</td>
                                         <td>
-                                            PF: ₹{(employee.pfDeduction ?? 0).toFixed(2)} <br/>
-                                            ESI: ₹{(employee.esiDeduction ?? 0).toFixed(2)} <br/>
+                                            PF: ₹{(employee.pfDeduction ?? 0).toFixed(2)} <br />
+                                            ESI: ₹{(employee.esiDeduction ?? 0).toFixed(2)} <br />
                                             PT: ₹{(employee.professionalTax ?? 0).toFixed(2)}
                                         </td>
                                         <td>₹{(employee.incentivesBonus ?? 0).toFixed(2)}</td>
@@ -421,31 +419,31 @@ const EmployeeSalaryInformation = () => {
                                     <div className="row mb-3">
                                         <div className="col-md-6">
                                             <label htmlFor="basicPay" className="form-label">Basic Pay (Monthly)</label>
-                                            <input type="number" step="0.01" className="form-control" id="basicPay" name="basicPay" value={formData.basicPay} onChange={(e) => setFormData({...formData, basicPay: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="basicPay" name="basicPay" value={formData.basicPay} onChange={(e) => setFormData({ ...formData, basicPay: e.target.value })} />
                                         </div>
                                         <div className="col-md-6">
                                             <label htmlFor="salaryInHandPerMonth" className="form-label">Monthly In-Hand Salary</label>
-                                            <input type="number" step="0.01" className="form-control" id="salaryInHandPerMonth" name="salaryInHandPerMonth" value={formData.salaryInHandPerMonth} onChange={(e) => setFormData({...formData, salaryInHandPerMonth: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="salaryInHandPerMonth" name="salaryInHandPerMonth" value={formData.salaryInHandPerMonth} onChange={(e) => setFormData({ ...formData, salaryInHandPerMonth: e.target.value })} />
                                         </div>
                                     </div>
                                     <div className="row mb-3">
                                         <div className="col-md-6">
                                             <label htmlFor="pfDeduction" className="form-label">PF Deduction (Monthly)</label>
-                                            <input type="number" step="0.01" className="form-control" id="pfDeduction" name="pfDeduction" value={formData.pfDeduction} onChange={(e) => setFormData({...formData, pfDeduction: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="pfDeduction" name="pfDeduction" value={formData.pfDeduction} onChange={(e) => setFormData({ ...formData, pfDeduction: e.target.value })} />
                                         </div>
                                         <div className="col-md-6">
                                             <label htmlFor="esiDeduction" className="form-label">ESI Deduction (Monthly)</label>
-                                            <input type="number" step="0.01" className="form-control" id="esiDeduction" name="esiDeduction" value={formData.esiDeduction} onChange={(e) => setFormData({...formData, esiDeduction: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="esiDeduction" name="esiDeduction" value={formData.esiDeduction} onChange={(e) => setFormData({ ...formData, esiDeduction: e.target.value })} />
                                         </div>
                                     </div>
                                     <div className="row mb-3">
                                         <div className="col-md-6">
                                             <label htmlFor="professionalTax" className="form-label">Professional Tax (Monthly)</label>
-                                            <input type="number" step="0.01" className="form-control" id="professionalTax" name="professionalTax" value={formData.professionalTax} onChange={(e) => setFormData({...formData, professionalTax: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="professionalTax" name="professionalTax" value={formData.professionalTax} onChange={(e) => setFormData({ ...formData, professionalTax: e.target.value })} />
                                         </div>
                                         <div className="col-md-6">
                                             <label htmlFor="incentivesBonus" className="form-label">Incentives / Bonus (Monthly)</label>
-                                            <input type="number" step="0.01" className="form-control" id="incentivesBonus" name="incentivesBonus" value={formData.incentivesBonus} onChange={(e) => setFormData({...formData, incentivesBonus: e.target.value})} />
+                                            <input type="number" step="0.01" className="form-control" id="incentivesBonus" name="incentivesBonus" value={formData.incentivesBonus} onChange={(e) => setFormData({ ...formData, incentivesBonus: e.target.value })} />
                                         </div>
                                     </div>
                                     <div className="row mb-3">
@@ -458,15 +456,14 @@ const EmployeeSalaryInformation = () => {
                                                 id="individualPaidLeaves"
                                                 name="individualPaidLeaves"
                                                 value={formData.individualPaidLeaves}
-                                                onChange={(e) => setFormData({...formData, individualPaidLeaves: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, individualPaidLeaves: e.target.value })}
                                             />
                                             <p className="mt-1 text-muted small">
                                                 **Note:** 1 = 1 full day, 0.5 = a half day.
                                             </p>
                                         </div>
                                     </div>
-                                    
-                                    {/* UPDATED SECTION FOR DYNAMIC ALLOWANCES */}
+
                                     <div className="mb-3 border p-3 rounded bg-light">
                                         <h6 className="d-flex justify-content-between align-items-center">
                                             Allowances
@@ -489,7 +486,7 @@ const EmployeeSalaryInformation = () => {
                                     </div>
                                     <div className="mb-3">
                                         <div className="form-check">
-                                            <input className="form-check-input" type="checkbox" id="salaryDetailsConfigured" name="salaryDetailsConfigured" checked={formData.salaryDetailsConfigured} onChange={(e) => setFormData({...formData, salaryDetailsConfigured: e.target.checked})} />
+                                            <input className="form-check-input" type="checkbox" id="salaryDetailsConfigured" name="salaryDetailsConfigured" checked={formData.salaryDetailsConfigured} onChange={(e) => setFormData({ ...formData, salaryDetailsConfigured: e.target.checked })} />
                                             <label className="form-check-label" htmlFor="salaryDetailsConfigured">
                                                 Salary Details Configured
                                             </label>
@@ -549,7 +546,7 @@ const EmployeeSalaryInformation = () => {
                     </div>
                 </div>
             )}
-            
+
             {showPrintableComponent && (
                 <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
                     <SalarySlipTemplate

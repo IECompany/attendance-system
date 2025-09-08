@@ -117,12 +117,12 @@ const SubmissionTable = ({ erpId }) => {
           <table className="table table-striped table-hover mt-4 shadow-sm rounded">
             <thead className="table-dark">
               <tr>
-                <th>ERP ID</th> 
+                <th>Email ID</th> 
                 <th>Check-in Date & Time</th>
                 <th>Check-out Date & Time</th> 
                 <th>Location (Check-in)</th>
                 <th>Location (Check-out)</th> 
-                <th>Office/DCCB</th>
+                <th>Office</th>
                 <th>District</th>
                 <th>State</th>
                 <th>Occupation</th>

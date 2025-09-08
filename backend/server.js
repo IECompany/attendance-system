@@ -1,4 +1,4 @@
-// backend/server.js - UPDATED to correctly apply protect middleware
+// backend/server.js - CORRECTED
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -19,7 +19,7 @@ app.use(express.json({ limit: "10mb" }));
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
 const submissionRoutes = require("./routes/submissionRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+const adminRoutes = require("./routes/adminRoutes"); // <-- YOUR route
 const adminDataDownloadFilter = require("./routes/adminDataDownloadFilter");
 const officeRoutes = require("./routes/officeRoutes");
 const stateRoutes = require("./routes/stateRoutes");
@@ -31,38 +31,31 @@ const companyRoutes = require("./routes/companyRoutes");
 // Import Middleware
 const { protect, authorize } = require('./middleware/companyAuth');
 
-// --- Define Public Routes First ---
-// These routes do NOT require any authentication middleware.
-// The login and company registration routes must be public.
-app.use("/api", authRoutes); // This includes /api/login and /api/register
-app.use("/api/company", companyRoutes); // This includes /api/company/register
+// Public Routes
+app.use("/api", authRoutes);
+app.use("/api/company", companyRoutes);
 
-// --- Apply Global Protection Middleware ---
-// Any route defined AFTER this line will automatically go through `protect` middleware.
-// This middleware will verify the JWT token and attach `req.user` and `req.companyId`.
-app.use(protect); // <-- Apply protect middleware here, ONCE.
+// Apply Authentication Middleware
+app.use(protect); // ✅ All routes below this line are protected
 
-// --- Define Protected Routes ---
-// These routes now automatically require authentication because of the `app.use(protect)` above.
-// You no longer need to add `protect` to each individual route mount below.
-// Apply `authorize` middleware for role-based access control where needed.
-
-app.use("/api", submissionRoutes); // All submission routes now require authentication
-app.use("/api", adminRoutes); // Admin routes (e.g., /api/admin/users)
-app.use("/api/admin", adminDataDownloadFilter); // Specific admin data download routes
-app.use("/api/offices", officeRoutes); // Office management routes
-app.use("/api", stateRoutes); // State management routes
-app.use("/api", occupationRoutes); // Occupation management routes
-app.use("/api/admin", bulkUploadRoutes); // Bulk user upload routes
-app.use("/api/admin", salaryRoutes); // Salary management routes
-
-// Example of applying `authorize` for role-based access on a specific route group
-// If your userRoutes are specifically for managing users by superadmin, apply authorize here.
-// app.use('/api/users', authorize(['superadmin']), userRoutes); // Uncomment if you have a dedicated userRoutes for user management
+// Protected Routes
+app.use("/api", submissionRoutes);
+app.use("/api/admin", adminRoutes); // ✅ FIXED: Now matches the route expected by frontend
+app.use("/api/admin", adminDataDownloadFilter);
+app.use("/api/offices", officeRoutes);
+app.use("/api", stateRoutes);
+app.use("/api", occupationRoutes);
+app.use("/api/admin", bulkUploadRoutes);
+app.use("/api/admin", salaryRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
   res.send("✅ Nectar API is running...");
+});
+
+// 404 Handler (Always Last)
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
 });
 
 // Connect to MongoDB and start server

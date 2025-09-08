@@ -1,57 +1,132 @@
-// src/components/BulkUserRegistration.jsx - UPDATED for Multi-Tenancy
-
-import React, { useState, useCallback } from "react"; // Added useCallback
-import { FaUpload, FaDownload } from "react-icons/fa";
+import React, { useState, useCallback } from "react";
+import { FaUpload, FaDownload, FaUserPlus } from "react-icons/fa";
 import { motion } from "framer-motion";
 import * as XLSX from "xlsx";
-import { Alert, Spinner, Button } from "react-bootstrap"; // Added Spinner, Button for consistency
-
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+import { Alert, Spinner, Button, Nav, Tabs, Tab, Form, Row, Col } from "react-bootstrap";
+import { useAuth } from '../authContext';
 
 const BulkUserRegistration = () => {
-  const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+  const { user, token, logout } = useAuth();
+  const [key, setKey] = useState('single'); // Single tab first by default
 
+  // State for Bulk Upload
   const [file, setFile] = useState(null);
-  const [message, setMessage] = useState("");
-  const [variant, setVariant] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [bulkMessage, setBulkMessage] = useState("");
+  const [bulkVariant, setBulkVariant] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [showFormatInfo, setShowFormatInfo] = useState(false);
 
-  // --- NEW: Helper to get authenticated headers ---
-  const getAuthHeaders = useCallback(() => {
+  // State for Single User Registration
+  const [formData, setFormData] = useState({
+    employeeId: "",
+    name: "",
+    dateOfBirth: "",
+    contactNo: "",
+    professionalEmail: "",
+    personalEmail: "",
+    departmentDesignation: "",
+    dateOfJoining: "",
+    currentCtc: "",
+    monthlyInHandSalary: "",
+    basicPay: "",
+    pfDeduction: "",
+    esiDeduction: "",
+    professionalTax: "",
+    incentivesBonus: "",
+  });
+  const [singleMessage, setSingleMessage] = useState("");
+  const [singleVariant, setSingleVariant] = useState("");
+  const [singleLoading, setSingleLoading] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState("");
+
+  // Helper to get authenticated headers
+  const getAuthHeaders = useCallback((isMultipart = false) => {
     if (!token || !user || !user.companyId) {
-      // If token or companyId is missing, it means user is not properly authenticated
-      // or session is invalid. Redirect to login.
-      setMessage("Session expired or invalid. Please log in again."); // Set error message
-      setVariant("danger");
-      logout(); // Use logout function from context
+      setBulkMessage("Session expired or invalid. Please log in again.");
+      setBulkVariant("danger");
+      logout();
       return null;
     }
-    return {
+    const headers = {
       'Authorization': `Bearer ${token}`,
       'X-Company-ID': user.companyId
     };
-  }, [token, user, logout]); // Dependencies for useCallback
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
+  }, [token, user, logout]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setMessage(""); // Clear previous messages
-    setVariant("");
+  // --- SINGLE USER HANDLERS ---
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleUpload = async () => {
+  const handleSingleSubmit = async (e) => {
+    e.preventDefault();
+    const headers = getAuthHeaders();
+    if (!headers) return;
+
+    setSingleMessage("");
+    setSingleVariant("");
+    setSingleLoading(true);
+    setGeneratedPassword("");
+
+    try {
+      const res = await fetch("http://localhost:5001/api/admin/register-single-user", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        setSingleMessage(`✅ User '${result.user.name}' registered successfully!`);
+        setSingleVariant("success");
+        setGeneratedPassword(result.user.generatedPassword);
+        // Clear form data
+        setFormData({
+          employeeId: "", name: "", dateOfBirth: "", contactNo: "",
+          professionalEmail: "", personalEmail: "", departmentDesignation: "",
+          dateOfJoining: "", currentCtc: "", monthlyInHandSalary: "",
+          basicPay: "", pfDeduction: "", esiDeduction: "",
+          professionalTax: "", incentivesBonus: "",
+        });
+      } else {
+        setSingleMessage(`❌ Registration failed: ${result.message || "Unknown error"}.`);
+        setSingleVariant("danger");
+      }
+    } catch (err) {
+      console.error("Error during registration:", err);
+      setSingleMessage(`❌ An error occurred: ${err.message}. Please check your network and try again.`);
+      setSingleVariant("danger");
+    } finally {
+      setSingleLoading(false);
+    }
+  };
+
+  // --- BULK UPLOAD HANDLERS ---
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    setBulkMessage("");
+    setBulkVariant("");
+  };
+
+  const handleBulkUpload = async () => {
     if (!file) {
-      setMessage("Please select an Excel file to upload.");
-      setVariant("warning");
+      setBulkMessage("Please select an Excel file to upload.");
+      setBulkVariant("warning");
       return;
     }
 
-    const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-    if (!headers) return; // Exit if headers are not available (getAuthHeaders will handle logout)
+    const headers = getAuthHeaders(true);
+    if (!headers) return;
 
-    setLoading(true);
-    setMessage("Uploading and processing file...");
-    setVariant("info");
+    setBulkLoading(true);
+    setBulkMessage("Uploading and processing file...");
+    setBulkVariant("info");
 
     try {
       const formData = new FormData();
@@ -59,10 +134,9 @@ const BulkUserRegistration = () => {
 
       const res = await fetch("http://localhost:5001/api/admin/bulk-register-users", {
         method: "POST",
-        headers: { // <-- NEW: Add headers for authentication
-            'Authorization': headers.Authorization,
-            'X-Company-ID': headers['X-Company-ID']
-            // Note: Content-Type for FormData is automatically set by the browser
+        headers: {
+          'Authorization': headers.Authorization,
+          'X-Company-ID': headers['X-Company-ID']
         },
         body: formData,
       });
@@ -70,39 +144,47 @@ const BulkUserRegistration = () => {
       const result = await res.json();
 
       if (res.ok) {
-        setMessage(`✅ Bulk user registration successful! Registered ${result.registeredCount} users. Failed: ${result.failedCount}.`);
-        setVariant("success");
+        setBulkMessage(`✅ Bulk registration complete! Registered: ${result.registeredCount}, Failed: ${result.failedCount}.`);
+        setBulkVariant("success");
         setFile(null);
       } else {
-        setMessage(`❌ Bulk registration failed: ${result.message || "Unknown error"}. Details: ${result.details || ''} ${result.missingHeaders ? 'Missing headers: ' + result.missingHeaders.join(', ') : ''}`);
-        setVariant("danger");
+        const errorDetails = result.missingHeaders ? `Missing headers: ${result.missingHeaders.join(', ')}` : result.details;
+        const failedReason = result.failedUsers?.length > 0 ? `Failed details: ${result.failedUsers[0].reason}` : '';
+        setBulkMessage(`❌ Bulk registration failed: ${result.message || "Unknown error"}. ${errorDetails || failedReason}`);
+        setBulkVariant("danger");
       }
     } catch (err) {
       console.error("Error during file upload:", err);
-      setMessage(`❌ An error occurred during upload: ${err.message}. Please check your network and try again.`);
-      setVariant("danger");
+      setBulkMessage(`❌ An error occurred: ${err.message}. Please check your network and try again.`);
+      setBulkVariant("danger");
     } finally {
-      setLoading(false);
+      setBulkLoading(false);
     }
   };
 
   const handleDownloadTemplate = () => {
     const headers = [
-      "Employee Id", "Employee Name", "Date of Birth",
-      "Personal email", "Professional Email", "Contact no",
-      "Current CTC", "Salary in hand per month", "Payable Amount",
-      "PF", "ESI", "Totral Payable Amoun", "Incentive", "tOTAL ctc"
+      "Employee Id", "Employee Name", "Date of Birth", "Contact No",
+      "Professional Email", "Personal Email", "Department / Designation",
+      "Date of Joining", "Current CTC (Annual)", "Monthly In-Hand Salary (Net Payable)",
+      "Basic Pay (Monthly)", "PF Deduction (Monthly)", "ESI Deduction (Monthly)", 
+      "Professional Tax (Monthly)", "Incentives / Bonus (Monthly)"
+    ];
+    const sampleRow = [
+      "EMP1001", "John Doe", "24/08/2002", "9876543210",
+      "john.doe@company.com", "john.doe@gmail.com", "Software Developer",
+      "01/01/2023", 500000, 45000,
+      25000, 1800, 500, 200,
+      3000
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Users Template");
-
     XLSX.writeFile(wb, "bulk_upload_template.xlsx");
 
-    setShowFormatInfo(false);
-    setMessage("Standard Excel template downloaded!");
-    setVariant("info");
+    setBulkMessage("Standard Excel template downloaded!");
+    setBulkVariant("info");
   };
 
   return (
@@ -120,78 +202,248 @@ const BulkUserRegistration = () => {
           style={{ borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}
         >
           <h5 className="mb-0">
-            <FaUpload className="me-2" /> Bulk User Registration (Excel Upload)
+            <FaUpload className="me-2" /> User Registration
           </h5>
         </div>
-        <div className="card-body d-flex flex-column flex-grow-1 p-4">
-
-          <Button
-            variant="info"
-            size="sm"
-            className="mb-3 d-flex align-items-center justify-content-center"
-            onClick={handleDownloadTemplate}
-            style={{ width: 'fit-content', minWidth: '220px' }}
+        <div className="card-body p-4">
+          <Tabs
+            id="controlled-tab-example"
+            activeKey={key}
+            onSelect={(k) => {
+              setKey(k);
+              setBulkMessage("");
+              setSingleMessage("");
+              setGeneratedPassword("");
+            }}
+            className="mb-3"
           >
-            <FaDownload className="me-2" /> Download Standard Excel Template
-          </Button>
+            <Tab eventKey="single" title="Single User">
+              <div className="d-flex flex-column h-100">
+                <Form onSubmit={handleSingleSubmit} className="flex-grow-1">
+                  <p className="text-muted small">
+                    Fields with an asterisk (<span className="text-danger">*</span>) are required.
+                  </p>
 
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            className="mb-3 ms-2 d-flex align-items-center justify-content-center"
-            onClick={() => setShowFormatInfo(!showFormatInfo)}
-            style={{ width: 'fit-content', minWidth: '180px' }}
-          >
-            {showFormatInfo ? 'Hide Format Details' : 'Show Format Details'}
-          </Button>
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="employeeId">
+                        <Form.Label>Employee ID <span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="text" name="employeeId" value={formData.employeeId} onChange={handleFormChange} required />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="name">
+                        <Form.Label>Employee Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="text" name="name" value={formData.name} onChange={handleFormChange} required />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-          {showFormatInfo && (
-            <div className="alert alert-info py-2 px-3 mb-3 small" role="alert">
-              **Excel Template Information:**
-              <br />
-              Upload an **Excel file (.xlsx or .xls)** to register multiple users.
-              <br />
-              **Required Columns:** `Employee Id`, `Employee Name`, `Date of Birth` (e.g., `24-Aug-2002`), and at least one of `Personal email` or `Professional Email`.
-              <br />
-              *Password will be auto-generated by the **backend** from 'Date of Birth' (e.g., `Aug@2002`).*
-            </div>
-          )}
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="dateOfBirth">
+                        <Form.Label>Date of Birth (DD/MM/YYYY) <span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="text" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleFormChange} placeholder="e.g., 24/08/2002" required />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="contactNo">
+                        <Form.Label>Contact No</Form.Label>
+                        <Form.Control type="text" name="contactNo" value={formData.contactNo} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-          <div className="mb-4">
-            <label htmlFor="excelFile" className="form-label fw-bold text-muted">Select Excel File:</label>
-            <input
-              type="file"
-              id="excelFile"
-              className="form-control form-control-lg"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-              disabled={loading}
-            />
-          </div>
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="professionalEmail">
+                        <Form.Label>Professional Email <span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="email" name="professionalEmail" value={formData.professionalEmail} onChange={handleFormChange} required />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="personalEmail">
+                        <Form.Label>Personal Email</Form.Label>
+                        <Form.Control type="email" name="personalEmail" value={formData.personalEmail} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-          {message && (
-            <Alert variant={variant} className="mt-3">
-              {message}
-            </Alert>
-          )}
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="departmentDesignation">
+                        <Form.Label>Department / Designation</Form.Label>
+                        <Form.Control type="text" name="departmentDesignation" value={formData.departmentDesignation} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="dateOfJoining">
+                        <Form.Label>Date of Joining (DD/MM/YYYY) <span className="text-danger">*</span></Form.Label>
+                        <Form.Control type="text" name="dateOfJoining" value={formData.dateOfJoining} onChange={handleFormChange} placeholder="e.g., 01/01/2023" required />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-          <Button
-            variant="warning"
-            className="w-100 py-3 fs-5 fw-bold mt-auto"
-            onClick={handleUpload}
-            disabled={!file || loading}
-          >
-            {loading ? (
-              <>
-                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <FaUpload className="me-2" /> Upload and Register Users
-              </>
-            )}
-          </Button>
+                  <h6 className="mt-4 mb-3 text-primary">Salary Details</h6>
+                  
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="currentCtc">
+                        <Form.Label>Current CTC (Annual)</Form.Label>
+                        <Form.Control type="number" name="currentCtc" value={formData.currentCtc} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="monthlyInHandSalary">
+                        <Form.Label>Monthly In-Hand Salary (Net Payable)</Form.Label>
+                        <Form.Control type="number" name="monthlyInHandSalary" value={formData.monthlyInHandSalary} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <h6 className="mt-4 mb-3 text-primary">Monthly Deductions & Incentives</h6>
+                  
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="basicPay">
+                        <Form.Label>Basic Pay (Monthly)</Form.Label>
+                        <Form.Control type="number" name="basicPay" value={formData.basicPay} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="pfDeduction">
+                        <Form.Label>PF Deduction (Monthly)</Form.Label>
+                        <Form.Control type="number" name="pfDeduction" value={formData.pfDeduction} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="esiDeduction">
+                        <Form.Label>ESI Deduction (Monthly)</Form.Label>
+                        <Form.Control type="number" name="esiDeduction" value={formData.esiDeduction} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group controlId="professionalTax">
+                        <Form.Label>Professional Tax (Monthly)</Form.Label>
+                        <Form.Control type="number" name="professionalTax" value={formData.professionalTax} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Form.Group controlId="incentivesBonus">
+                        <Form.Label>Incentives / Bonus (Monthly)</Form.Label>
+                        <Form.Control type="number" name="incentivesBonus" value={formData.incentivesBonus} onChange={handleFormChange} />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {singleMessage && (
+                    <Alert variant={singleVariant} className="mt-3">
+                      {singleMessage}
+                      {generatedPassword && (
+                        <div className="mt-2 fw-bold">
+                          Generated Password: <span className="text-decoration-underline">{generatedPassword}</span>
+                        </div>
+                      )}
+                    </Alert>
+                  )}
+
+                  <Button
+                    variant="warning"
+                    className="w-100 py-3 fs-5 fw-bold mt-auto"
+                    type="submit"
+                    disabled={singleLoading}
+                  >
+                    {singleLoading ? (
+                      <>
+                        <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                        Registering...
+                      </>
+                    ) : (
+                      <>
+                        <FaUserPlus className="me-2" /> Register User
+                      </>
+                    )}
+                  </Button>
+                </Form>
+              </div>
+            </Tab>
+
+            <Tab eventKey="bulk" title="Bulk Upload">
+              <div className="d-flex flex-column h-100">
+                <div className="d-flex align-items-center mb-3">
+                  <Button
+                    variant="info"
+                    size="sm"
+                    className="me-2 d-flex align-items-center"
+                    onClick={handleDownloadTemplate}
+                  >
+                    <FaDownload className="me-2" /> Download Template
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => setShowFormatInfo(!showFormatInfo)}
+                  >
+                    {showFormatInfo ? 'Hide Format Details' : 'Show Format Details'}
+                  </Button>
+                </div>
+
+                {showFormatInfo && (
+                  <div className="alert alert-info py-2 px-3 mb-3 small" role="alert">
+                    **Excel Template Information:**
+                    <br />
+                    Upload an **Excel file (.xlsx or .xls)** to register multiple users.
+                    <br />
+                    **Required Columns:** `Employee Id`, `Employee Name`, `Date of Birth`, `Professional Email`, and `Date of Joining`.
+                    <br />
+                    **Date Format:** Please enter dates as **DD/MM/YYYY** (e.g., `24/08/2002`).
+                    <br />
+                    **Salary Fields:** All salary fields (Basic Pay, PF, ESI, etc.) should be monthly amounts.
+                    <br />
+                    **Password:** The system will auto-generate the password as `lowercase(employeename)@MMYYYY`.
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <label htmlFor="excelFile" className="form-label fw-bold text-muted">Select Excel File:</label>
+                  <input
+                    type="file"
+                    id="excelFile"
+                    className="form-control"
+                    accept=".xlsx, .xls"
+                    onChange={handleFileChange}
+                    disabled={bulkLoading}
+                  />
+                </div>
+
+                {bulkMessage && <Alert variant={bulkVariant} className="mt-3">{bulkMessage}</Alert>}
+
+                <Button
+                  variant="warning"
+                  className="w-100 py-3 fs-5 fw-bold mt-auto"
+                  onClick={handleBulkUpload}
+                  disabled={!file || bulkLoading}
+                >
+                  {bulkLoading ? (
+                    <>
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaUpload className="me-2" /> Upload and Register Users
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Tab>
+          </Tabs>
         </div>
       </div>
     </motion.div>

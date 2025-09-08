@@ -1,34 +1,31 @@
-// frontend/src/App.jsx (Partial update)
+// frontend/src/App.jsx
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './authContext'; // Make sure authContext is correctly set up
+import { AuthProvider, useAuth } from './authContext';
 
 // Import your pages
-import Dashboard from './pages/Dashboard'; // Likely your combined Login/Registration for users
-import MainDashboard from './pages/MainDashboard'; // User's main dashboard
-import AdminPanel from './pages/AdminPanel'; // Admin's dashboard
-import SuperAdminPanel from './pages/SuperAdminPanel'; // Super Admin's dashboard
-import CompanyRegister from './pages/CompanyRegister'; // <-- NEW: Import CompanyRegister
+import Dashboard from './pages/Dashboard';
+import MainDashboard from './pages/MainDashboard';
+import AdminPanel from './pages/AdminPanel';
+import SuperAdminPanel from './pages/SuperAdminPanel';
+import CompanyRegister from './pages/CompanyRegister';
+import LandingPage from './pages/LandingPage'; // <-- NEW: Import the new component
 
-// You might have other imports like Navbar, etc.
-
-// PrivateRoute component (if you don't have one, consider adding for protected routes)
+// PrivateRoute component (no changes)
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth(); // Assuming useAuth gives user object and loading state
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading authentication...</div>; // Or a spinner
+    return <div>Loading authentication...</div>;
   }
 
   if (!user) {
-    // Not authenticated, redirect to login (or company registration if that's the entry point)
-    return <Navigate to="/login" />; // Redirect to login
+    return <Navigate to="/login" />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.userType)) {
-    // Authenticated but not authorized, redirect to unauthorized page or dashboard
-    return <Navigate to="/unauthorized" />; // You might create an Unauthorized page
+    return <Navigate to="/unauthorized" />;
   }
 
   return children;
@@ -38,15 +35,14 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <Router>
-      <AuthProvider> {/* Wrap your application with AuthProvider */}
-        {/* <Navbar /> // You might want a conditional navbar based on auth status/role */}
+      <AuthProvider>
         <Routes>
           {/* Public Routes */}
-          {/* This route will be the entry point for new company registration */}
-          <Route path="/register-company" element={<CompanyRegister />} /> {/* <-- NEW ROUTE */}
-          <Route path="/login" element={<Dashboard />} /> {/* Your existing login/user registration */}
-          <Route path="/" element={<Navigate to="/login" />} /> {/* Default redirect */}
-          <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} /> {/* Optional */}
+          {/* This route is now the default entry point */}
+          <Route path="/" element={<LandingPage />} /> {/* <-- UPDATED: Default route */}
+          <Route path="/register-company" element={<CompanyRegister />} />
+          <Route path="/login" element={<Dashboard />} />
+          <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} />
 
           {/* Protected Routes - Example usage */}
           <Route

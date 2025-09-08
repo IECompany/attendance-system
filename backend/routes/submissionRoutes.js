@@ -91,18 +91,15 @@ router.post("/erp-submission", upload, async (req, res) => {
       const checkinPhotos = [];
       const photoFiles = req.files.filter(file => file.fieldname === 'photos');
 
-      // --- Check-in Photo Count Validation ---
-      let expectedPhotoCount = 1; // Default for non-SE
-      if (occupation === "SE") {
-        expectedPhotoCount = 2; // Two photos for SE
-        if (!bikeMeterReading) {
-          return res.status(400).json({ message: "For SE Check-in: Bike meter reading is required." });
-        }
+      // ✅ UPDATED: Check-in Photo Count Validation based on bikeMeterReading
+      let expectedPhotoCount = 1; // Default
+      if (bikeMeterReading) { // If a meter reading was provided
+        expectedPhotoCount = 2; // Expect two photos
       }
 
       if (photoFiles.length !== expectedPhotoCount) {
         return res.status(400).json({
-          message: `For Check-in: Exactly ${expectedPhotoCount} photo(s) required for ${occupation} (You provided ${photoFiles.length}).`
+          message: `For Check-in: Exactly ${expectedPhotoCount} photo(s) required. You provided ${photoFiles.length}.`
         });
       }
 
@@ -128,7 +125,8 @@ router.post("/erp-submission", upload, async (req, res) => {
           district: officeDistrict,
           dccb: officeName,
           photos: checkinPhotos,
-          bikeMeterReading: occupation === "SE" ? bikeMeterReading : undefined,
+          // ✅ UPDATED: bikeMeterReading is now saved if it was provided
+          bikeMeterReading: bikeMeterReading ? bikeMeterReading : undefined,
         },
         status: 'active',
       });
@@ -154,10 +152,11 @@ router.post("/erp-submission", upload, async (req, res) => {
       const checkoutPhotos = [];
       let expectedCheckoutPhotoCount = 1;
 
-      const checkedInOccupation = latestActiveVisit.checkin.occupation;
+      // ✅ UPDATED: Check if a bike meter reading was provided during check-in
+      const checkinBikeMeterReadingExists = latestActiveVisit.checkin.bikeMeterReading;
       let checkoutBikeMeterReadingRequired = false;
 
-      if (checkedInOccupation === "SE") {
+      if (checkinBikeMeterReadingExists) {
         expectedCheckoutPhotoCount = 2;
         checkoutBikeMeterReadingRequired = true;
       }
@@ -165,13 +164,13 @@ router.post("/erp-submission", upload, async (req, res) => {
       // --- Check-out Photo Count Validation ---
       if (checkoutPhotoFiles.length !== expectedCheckoutPhotoCount) {
         return res.status(400).json({
-          message: `For Check-out: Exactly ${expectedCheckoutPhotoCount} photo(s) required (You provided ${checkoutPhotoFiles.length}).`
+          message: `For Check-out: Exactly ${expectedCheckoutPhotoCount} photo(s) required. You provided ${checkoutPhotoFiles.length}.`
         });
       }
 
       // --- Check-out Bike Meter Reading Validation ---
       if (checkoutBikeMeterReadingRequired && (!bikeMeterReading || isNaN(parseFloat(bikeMeterReading)))) {
-        return res.status(400).json({ message: "For SE Check-out: Bike meter reading is required and must be a number." });
+        return res.status(400).json({ message: "For Check-out with meter, a bike meter reading is required and must be a number." });
       }
 
       // Upload all checkout photos
@@ -189,6 +188,7 @@ router.post("/erp-submission", upload, async (req, res) => {
         latitude: parsedLatitude,
         longitude: parsedLongitude,
         photos: checkoutPhotos,
+        // ✅ UPDATED: bikeMeterReading is now saved if it was required and provided
         bikeMeterReading: checkoutBikeMeterReadingRequired ? bikeMeterReading : undefined,
       };
       latestActiveVisit.status = 'completed'; // Mark visit as completed

@@ -1,6 +1,4 @@
-// AdminPanel.jsx - UPDATED for Multi-Tenancy
-
-import React, { useState, useEffect, useCallback } from "react"; // Added useCallback
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FaDownload,
   FaMapMarkedAlt,
@@ -9,20 +7,20 @@ import {
   FaRedo
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Spinner, Alert, Form, Row, Col, Button } from 'react-bootstrap'; // Ensure Button is imported
+import { Spinner, Alert, Form, Row, Col, Button } from 'react-bootstrap';
 import AdminVisitsTable from "../components/AdminVisitsTable";
 
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+import { useAuth } from '../authContext';
 
 const AdminPanel = () => {
-  const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+  const { user, token, logout } = useAuth();
 
   // --- States for CSV Download Section ---
   const [district, setDistrict] = useState("");
   const [state, setState] = useState("");
   const [date, setDate] = useState("");
   const [erpIdDownload, setErpIdDownload] = useState("");
-  const [downloadLoading, setDownloadLoading] = useState(false); // New: For download loading state
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
   // --- States for Table Filtering ---
   const [tableErpIdFilter, setTableErpIdFilter] = useState("");
@@ -30,8 +28,6 @@ const AdminPanel = () => {
   const [tableStateFilter, setTableStateFilter] = useState("");
   const [tableDateFilter, setTableDateFilter] = useState("");
   const [tableStatusFilter, setTableStatusFilter] = useState("");
-
-  const [bgColor, setBgColor] = useState("#e3f2fd");
 
   // --- Lists for Dropdowns ---
   const [districtList, setDistrictList] = useState([]);
@@ -44,7 +40,6 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- NEW: Helper to get authenticated headers ---
   const getAuthHeaders = useCallback(() => {
     if (!token || !user || !user.companyId) {
       alert("Session expired or invalid. Please log in again.");
@@ -57,19 +52,15 @@ const AdminPanel = () => {
     };
   }, [token, user, logout]);
 
-  // --- Effect to Fetch Dropdown Options on Mount ---
   useEffect(() => {
-    // Initial authentication check
     if (!user || !token || !user.companyId) {
       logout();
       return;
     }
 
-    setBgColor("#e3f2fd");
     const headers = getAuthHeaders();
     if (!headers) return;
 
-    // Fetch unique districts for dropdowns
     fetch("http://localhost:5001/api/admin/unique-districts", { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -78,7 +69,6 @@ const AdminPanel = () => {
       .then(setDistrictList)
       .catch((err) => console.error("❌ Failed to fetch districts:", err));
 
-    // Fetch unique states for dropdowns
     fetch("http://localhost:5001/api/admin/unique-states", { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -87,20 +77,17 @@ const AdminPanel = () => {
       .then(setStateList)
       .catch((err) => console.error("❌ Failed to fetch states:", err));
 
-    // Fetch unique dates for dropdowns
-    fetch("http://localhost:5001/api/admin/unique-checkin-dates", { headers }) // Corrected endpoint name
+    fetch("http://localhost:5001/api/admin/unique-checkin-dates", { headers })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
       })
       .then(setDateList)
       .catch((err) => console.error("❌ Failed to fetch dates:", err));
-  }, [user, token, logout, getAuthHeaders]); // Added dependencies
+  }, [user, token, logout, getAuthHeaders]);
 
-  // Effect to Fetch Visits for the Table
   useEffect(() => {
     const fetchVisitsForTable = async () => {
-      // Initial authentication check
       if (!user || !token || !user.companyId) {
         logout();
         return;
@@ -120,7 +107,7 @@ const AdminPanel = () => {
         if (tableStatusFilter) queryParams.append("status", tableStatusFilter);
 
         const url = `http://localhost:5001/api/admin/visits?${queryParams.toString()}`;
-        const res = await fetch(url, { headers }); // <-- NEW: Pass headers
+        const res = await fetch(url, { headers });
         
         if (!res.ok) {
           const errorData = await res.json();
@@ -137,12 +124,11 @@ const AdminPanel = () => {
     };
 
     fetchVisitsForTable();
-  }, [tableErpIdFilter, tableDistrictFilter, tableStateFilter, tableDateFilter, tableStatusFilter, user, token, logout, getAuthHeaders]); // Added dependencies
+  }, [tableErpIdFilter, tableDistrictFilter, tableStateFilter, tableDateFilter, tableStatusFilter, user, token, logout, getAuthHeaders]);
 
-  // --- CSV Download Handlers (UPDATED to use fetch with headers) ---
   const downloadCsv = async (url, filename) => {
     setDownloadLoading(true);
-    setError(null); // Clear previous errors
+    setError(null);
     const headers = getAuthHeaders();
     if (!headers) {
         setDownloadLoading(false);
@@ -151,12 +137,12 @@ const AdminPanel = () => {
 
     try {
         const response = await fetch(url, {
-            method: 'GET', // Or POST if your backend expects it for larger filters
+            method: 'GET',
             headers: headers,
         });
 
         if (!response.ok) {
-            const errorData = await response.text(); // Get text as it might not be JSON for errors
+            const errorData = await response.text();
             throw new Error(errorData || `Failed to download CSV: ${response.status} ${response.statusText}`);
         }
 
@@ -200,30 +186,134 @@ const AdminPanel = () => {
   };
 
   return (
-    <div style={{ backgroundColor: bgColor, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <header className="py-4 text-center text-white" style={{ backgroundColor: "#0d6efd" }}>
-        <h2><FaMapMarkedAlt className="me-2" /> Admin Panel</h2>
+    <>
+      <style jsx="true">{`
+        :root {
+          --ui-orange: #FF8F00;
+          --ui-turquoise: #00796B;
+          --ui-white: #FAFAFA;
+          --ui-dark: #333;
+          --ui-gray: #6c757d;
+          --ui-light-gray: #f8f9fa;
+          --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+          --transition-speed: 0.3s;
+        }
+
+        body {
+          background-color: var(--ui-white);
+          font-family: 'Poppins', sans-serif;
+          color: var(--ui-dark);
+        }
+
+        .admin-header {
+          background-color: var(--ui-turquoise);
+          color: var(--ui-white);
+          padding: 3rem 0;
+          text-align: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .admin-header h2 {
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+
+        .content-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .panel-card {
+            border-radius: 15px;
+            box-shadow: var(--box-shadow-light);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            border: none;
+            overflow: hidden;
+            background-color: var(--ui-light-gray);
+        }
+        
+        .panel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-header-custom {
+            background-color: var(--ui-turquoise);
+            color: var(--ui-white);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-bottom: none;
+        }
+        
+        .btn-custom-primary {
+            background-color: var(--ui-turquoise);
+            color: var(--ui-white);
+            border: none;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-custom-primary:hover {
+            background-color: #005f54;
+            transform: translateY(-2px);
+        }
+
+        .btn-custom-secondary {
+            background-color: var(--ui-orange);
+            color: var(--ui-white);
+            border: none;
+            transition: all var(--transition-speed);
+        }
+        
+        .btn-custom-secondary:hover {
+            background-color: #e57d00;
+            transform: translateY(-2px);
+        }
+
+        .btn-custom-outline {
+            color: var(--ui-turquoise);
+            border: 2px solid var(--ui-turquoise);
+            background-color: transparent;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-custom-outline:hover {
+            background-color: var(--ui-turquoise);
+            color: var(--ui-white);
+            border-color: var(--ui-turquoise);
+        }
+        
+        .form-select, .form-control {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+        }
+
+        .footer {
+            background-color: var(--ui-turquoise);
+            color: var(--ui-white);
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+      `}</style>
+      
+      <header className="admin-header">
+        <h2><FaMapMarkedAlt className="me-3" />Admin Panel</h2>
       </header>
 
-      <motion.div
-        className="w-100 text-center text-dark py-4 greeting-card-full shadow-sm"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      />
-
-      <main className="container my-4 flex-grow-1">
+      <main className="container content-container">
         <div className="row g-4">
 
           {/* Download Dataset Section */}
-          <motion.div className="col-md-6 d-flex" whileHover={{ scale: 1.02 }}>
-            <div className="card shadow-sm panel-card w-100 d-flex flex-column" style={{ backgroundColor: "#e7f0ff" }}>
-              <div className="card-header d-flex justify-content-between align-items-center bg-primary text-white fw-bold">
+          <motion.div className="col-md-6 d-flex" whileHover={{ scale: 1.02 }} >
+            <div className="card panel-card w-100 d-flex flex-column">
+              <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
                 <span><FaDownload className="me-2" /> Download Dataset (CSV)</span>
               </div>
               <div className="card-body d-flex flex-column flex-grow-1">
-                <select
-                  className="form-select mb-2"
+                <Form.Select
+                  className="mb-3"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                 >
@@ -231,10 +321,10 @@ const AdminPanel = () => {
                   {districtList.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
+                </Form.Select>
 
-                <select
-                  className="form-select mb-2"
+                <Form.Select
+                  className="mb-3"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
                 >
@@ -242,10 +332,10 @@ const AdminPanel = () => {
                   {stateList.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
-                </select>
+                </Form.Select>
 
-                <select
-                  className="form-select mb-3"
+                <Form.Select
+                  className="mb-4"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 >
@@ -253,26 +343,26 @@ const AdminPanel = () => {
                   {dateList.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
+                </Form.Select>
 
-                <Button className="btn btn-primary w-100 mb-3" onClick={handleDownload} disabled={downloadLoading}>
+                <Button className="btn-custom-primary w-100 mb-3" onClick={handleDownload} disabled={downloadLoading}>
                   {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
                   {downloadLoading ? 'Downloading...' : 'Download Filtered Dataset'}
                 </Button>
 
                 <input
                   type="text"
-                  className="form-control mb-2"
+                  className="form-control mb-3"
                   placeholder="Enter ERP ID to download"
                   value={erpIdDownload}
                   onChange={(e) => setErpIdDownload(e.target.value)}
                 />
-                <Button className="btn btn-success w-100 mb-3" onClick={handleDownloadByErpId} disabled={downloadLoading}>
+                <Button className="btn-custom-secondary w-100 mb-4" onClick={handleDownloadByErpId} disabled={downloadLoading}>
                   {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
-                  {downloadLoading ? 'Downloading...' : 'Download My ERP Dataset'}
+                  {downloadLoading ? 'Downloading...' : 'Download by ERP ID'}
                 </Button>
 
-                <Button className="btn btn-outline-primary w-100 py-3 fs-5" onClick={handleDownloadAll} disabled={downloadLoading}>
+                <Button className="btn-custom-outline w-100 py-3 fs-5" onClick={handleDownloadAll} disabled={downloadLoading}>
                   {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
                   {downloadLoading ? 'Downloading...' : 'Download Entire Dataset'}
                 </Button>
@@ -282,20 +372,20 @@ const AdminPanel = () => {
 
           {/* Filter Visit Data for Table Section */}
           <motion.div className="col-md-6 d-flex" whileHover={{ scale: 1.02 }}>
-            <div className="card shadow-sm panel-card w-100 d-flex flex-column" style={{ backgroundColor: "#e7f0ff" }}>
-              <div className="card-header d-flex justify-content-between align-items-center bg-primary text-white fw-bold">
+            <div className="card panel-card w-100 d-flex flex-column">
+              <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
                 <span><FaClipboardList className="me-2" /> Filter Table Data</span>
               </div>
               <div className="card-body d-flex flex-column flex-grow-1">
                 <input
                   type="text"
-                  className="form-control mb-2"
+                  className="form-control mb-3"
                   placeholder="Filter by ERP ID"
                   value={tableErpIdFilter}
                   onChange={(e) => setTableErpIdFilter(e.target.value)}
                 />
-                <select
-                  className="form-select mb-2"
+                <Form.Select
+                  className="mb-3"
                   value={tableDistrictFilter}
                   onChange={(e) => setTableDistrictFilter(e.target.value)}
                 >
@@ -303,9 +393,9 @@ const AdminPanel = () => {
                   {districtList.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
-                <select
-                  className="form-select mb-2"
+                </Form.Select>
+                <Form.Select
+                  className="mb-3"
                   value={tableStateFilter}
                   onChange={(e) => setTableStateFilter(e.target.value)}
                 >
@@ -313,9 +403,9 @@ const AdminPanel = () => {
                   {stateList.map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
-                </select>
-                <select
-                  className="form-select mb-2"
+                </Form.Select>
+                <Form.Select
+                  className="mb-3"
                   value={tableDateFilter}
                   onChange={(e) => setTableDateFilter(e.target.value)}
                 >
@@ -323,9 +413,9 @@ const AdminPanel = () => {
                   {dateList.map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
-                 <select
-                  className="form-select mb-3"
+                </Form.Select>
+                 <Form.Select
+                  className="mb-4"
                   value={tableStatusFilter}
                   onChange={(e) => setTableStatusFilter(e.target.value)}
                 >
@@ -333,10 +423,10 @@ const AdminPanel = () => {
                   {statusList.map((s) => (
                     <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
                   ))}
-                </select>
+                </Form.Select>
                 <Button
                   variant="outline-secondary"
-                  className="w-100"
+                  className="btn-custom-outline w-100"
                   onClick={() => {
                     setTableErpIdFilter("");
                     setTableDistrictFilter("");
@@ -345,6 +435,7 @@ const AdminPanel = () => {
                     setTableStatusFilter("");
                   }}
                 >
+                  <FaRedo className="me-2" />
                   Clear Table Filters
                 </Button>
               </div>
@@ -353,8 +444,8 @@ const AdminPanel = () => {
 
           {/* All Visit Data Section */}
           <motion.div className="col-12" whileHover={{ scale: 1.01 }}>
-            <div className="card mt-4 mb-5 shadow-sm panel-card" style={{ backgroundColor: "#e7f0ff" }}>
-              <div className="card-header bg-primary text-white fw-bold">
+            <div className="card panel-card" >
+              <div className="card-header card-header-custom">
                 <FaClipboardList className="me-2" /> All Visit Data
               </div>
               <div className="card-body">
@@ -366,23 +457,12 @@ const AdminPanel = () => {
         </div>
       </main>
 
-      <footer className="text-white text-center py-3" style={{ backgroundColor: "#0d6efd" }}>
-        <small>&copy; {new Date().getFullYear()} Nectar Infotel. All rights reserved.</small>
+      <footer className="footer">
+        <div className="container">
+          <small>&copy; {new Date().getFullYear()} Nectar Infotel. All rights reserved.</small>
+        </div>
       </footer>
-
-      <style>{`
-        .panel-card {
-          border-radius: 1rem;
-          transition: transform 0.3s ease;
-        }
-        .greeting-card-full {
-          background: #d0e7ff;
-          border-bottom-left-radius: 20%;
-          border-bottom-right-radius: 20%;
-          border: 2px solid #2196f3;
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 

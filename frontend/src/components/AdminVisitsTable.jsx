@@ -245,7 +245,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
       <Table striped bordered hover responsive className="mt-4 shadow-sm rounded">
         <thead className="table-dark">
           <tr>
-            <th>ERP ID</th>
+            <th>Email ID</th>
             <th>Status</th>
             <th>Photos</th>
             <th>Occupation</th>
@@ -403,11 +403,11 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
         <>
           {/* --- Filter Section --- */}
           <div className="filter-section p-3 mb-4 rounded shadow-sm" style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
-            <h5 className="mb-3 text-primary"><FaFilter className="me-2" />Filter Visits</h5>
+            <h5 className="mb-3 text-primary"><FaFilter className="me-2" />Apply Filters</h5>
             <Row className="g-3 align-items-end">
               <Col md={4} sm={6}>
                 <Form.Group controlId="filterByState">
-                  <Form.Label>By State:</Form.Label>
+                  <Form.Label>Search By State:</Form.Label>
                   <Form.Select
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
@@ -420,7 +420,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
               </Col>
               <Col md={4} sm={6}>
                 <Form.Group controlId="filterByOffice">
-                  <Form.Label>By Office (DCCB):</Form.Label>
+                  <Form.Label>Search By Office</Form.Label>
                   <Form.Select
                     value={selectedDCCB}
                     onChange={(e) => setSelectedDCCB(e.target.value)}
@@ -433,7 +433,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
               </Col>
               <Col md={4} sm={12}>
                 <Form.Group controlId="filterByOccupation">
-                  <Form.Label>By Occupation:</Form.Label>
+                  <Form.Label>Search By Occupation:</Form.Label>
                   <Form.Select
                     value={selectedOccupation}
                     onChange={(e) => setSelectedOccupation(e.target.value)}
@@ -459,7 +459,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
                 <Nav.Link eventKey="normal">Employee Attendance ({filteredNormalVisits.length})</Nav.Link>
               </Nav.Item>
               <Nav.Item>
-                <Nav.Link eventKey="se">SE Attendance ({filteredSeVisits.length})</Nav.Link>
+                {/*<Nav.Link eventKey="se">SE Attendance ({filteredSeVisits.length})</Nav.Link>*/}
               </Nav.Item>
             </Nav>
             <Tab.Content>
@@ -485,7 +485,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
       {/* Photo Display Modal - Remains unchanged */}
       <Modal show={showPhotoModal} onHide={handleClosePhotoModal} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>All Photos for ERP ID: {selectedVisitErpId}</Modal.Title>
+          <Modal.Title>All Photos for Email Id: {selectedVisitErpId}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedVisitPhotos.length > 0 ? (

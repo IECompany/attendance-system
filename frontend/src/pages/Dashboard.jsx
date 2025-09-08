@@ -1,14 +1,13 @@
-// Dashboard.jsx (Login Component) - UPDATED to fix Super Admin redirect path
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../authContext";
+import { FaUserPlus, FaSignInAlt } from 'react-icons/fa'; // Import icons
 
 const Dashboard = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [name, setName] = useState(""); // For registration only
-  const [loginId, setLoginId] = useState(""); // Can be email or pacsId
+  const [name, setName] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,7 +29,6 @@ const Dashboard = () => {
 
     try {
       if (isLogin) {
-        // --- Login Flow ---
         const res = await fetch(`${API_BASE_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -39,7 +37,6 @@ const Dashboard = () => {
 
         const data = await res.json();
 
-        // Debugging Logs for Successful Login (already present)
         console.log('Login API Response Status:', res.status);
         console.log('Login API Response Data:', data);
         if (data && data.user) {
@@ -58,23 +55,20 @@ const Dashboard = () => {
 
         const { token, user } = data;
         
-        // Calling useAuth login function (already present)
         console.log('Calling useAuth login with user:', user);
         console.log('Calling useAuth login with token:', token ? 'present' : 'missing');
         login(user, token);
 
-        // --- FIXED: Redirection Path for Super Admin ---
         console.log('Attempting redirection based on userType:', user.userType);
         if (user.userType === "superadmin") {
-          navigate("/super-admin-panel"); // <-- CHANGED: Added hyphen here
+          navigate("/super-admin-panel");
         } else if (user.userType === "admin") {
           navigate("/admin-panel");
-        } else { // 'user' or 'pacs'
+        } else {
           navigate("/user-dashboard");
         }
 
       } else {
-        // --- User Registration Flow (for existing companies) ---
         if (password !== confirmPassword) {
           setErrorMessage("Passwords do not match!");
           return;
@@ -102,7 +96,7 @@ const Dashboard = () => {
         setErrorMessage("Registered and logged in successfully!");
         setTimeout(() => {
           if (user.userType === "superadmin") {
-            navigate("/super-admin-panel"); // <-- Also change here if this path is used for registration redirect
+            navigate("/super-admin-panel");
           } else if (user.userType === "admin") {
             navigate("/admin-panel");
           } else {
@@ -119,28 +113,175 @@ const Dashboard = () => {
   };
 
   return (
-    <div>
+    <>
+      <style jsx="true">{`
+        :root {
+          --ui-orange: #FF8F00;
+          --ui-turquoise: #00796B;
+          --ui-white: #FAFAFA;
+          --ui-dark: #333;
+          --ui-gray: #6c757d;
+          --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+          --transition-speed: 0.3s;
+        }
+        
+        body {
+          background-color: var(--ui-white);
+          font-family: 'Poppins', sans-serif;
+          color: var(--ui-dark);
+        }
+
+        .login-hero {
+          background: linear-gradient(135deg, var(--ui-turquoise) 0%, #004d40 100%);
+          color: var(--ui-white);
+          padding: 80px 0;
+          text-align: center;
+          position: relative;
+          z-index: 1;
+        }
+        
+        .login-hero h2 {
+          font-weight: 700;
+          font-size: 2.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .login-hero p {
+          font-size: 1.1rem;
+          opacity: 0.9;
+        }
+
+        .auth-container {
+          position: relative;
+          z-index: 2;
+          margin-top: -60px; /* Overlap with hero section */
+        }
+        
+        .auth-card {
+          background-color: var(--ui-white);
+          border-radius: 15px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          padding: 2.5rem;
+          transition: all var(--transition-speed);
+        }
+        
+        .auth-card:hover {
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .form-title {
+          font-weight: 600;
+          margin-bottom: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+        }
+        
+        .form-label {
+          font-weight: 500;
+          color: var(--ui-dark);
+        }
+
+        .form-control {
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          padding: 10px 15px;
+          transition: all var(--transition-speed);
+        }
+        
+        .form-control:focus {
+          border-color: var(--ui-turquoise);
+          box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+        }
+
+        .btn-submit {
+          font-weight: 600;
+          padding: 12px;
+          border-radius: 8px;
+          transition: all var(--transition-speed);
+          background-color: var(--ui-turquoise);
+          color: var(--ui-white);
+          border: none;
+        }
+        
+        .btn-submit:hover {
+          background-color: #005f54;
+        }
+        
+        .btn-toggle {
+            color: var(--ui-gray);
+            font-size: 0.9rem;
+            transition: color var(--transition-speed);
+        }
+        
+        .btn-toggle:hover {
+            color: var(--ui-turquoise);
+        }
+        
+        .link-company-reg {
+            color: var(--ui-orange);
+            font-weight: 500;
+            transition: color var(--transition-speed);
+        }
+        
+        .link-company-reg:hover {
+            color: #cc7200;
+        }
+
+        .footer {
+          background-color: #f8f9fa;
+          color: var(--ui-gray);
+          padding: 20px 0;
+          text-align: center;
+          margin-top: 50px;
+        }
+        
+        /* Ad Space Styling */
+        .ad-space {
+          background-color: #f0f0f0;
+          border: 1px dashed #ccc;
+          padding: 2rem;
+          text-align: center;
+          border-radius: 15px;
+          margin-top: 2rem;
+        }
+      `}</style>
+
       <Navbar />
 
-      <div className="welcome-box text-center mb-5">
-        <h2 className="fw-bold text-white">Submit Your Attendance here </h2>
-        <p className="text-light fs-5">
-            enter your check-in and check-out times to mark your daily attendance
-        </p>
+      <div className="login-hero">
+        <div className="container">
+          <h2>Welcome Back!</h2>
+          <p>
+            Your journey to simplified workforce management begins here.
+          </p>
+        </div>
       </div>
 
-      <div className="container mt-4">
-        <div className="row justify-content-center g-4">
-          <div className="col-md-6">
-            <div className="card form-card shadow-lg p-4 border-0">
-              <h4 className={`text-center mb-4 ${isLogin ? "text-primary" : "text-info"}`}>
-                {isLogin ? "Login" : "Register"}
+      <div className="container auth-container">
+        <div className="row justify-content-center">
+          <div className="col-lg-5 col-md-7">
+            {/* Main authentication card */}
+            <div className="auth-card">
+              <h4 className="text-center form-title">
+                {isLogin ? <FaSignInAlt /> : <FaUserPlus />}
+                {isLogin ? "Login to Your Account" : "Create a New Account"}
               </h4>
+              
+              {/* This is the new ad space div, moved to a more visible location */}
+              <div className="ad-space">
+                <p className="text-muted small mb-0">Advertisement</p>
+                {/* Your actual ad code (e.g., Google AdSense) goes here */}
+                <div style={{ height: '100px', backgroundColor: '#e9ecef', marginTop: '10px', borderRadius: '8px' }}>
+                  <p style={{ paddingTop: '40px' }}>[Your Ad Content]</p>
+                </div>
+              </div>
 
               <form onSubmit={handleSubmit}>
                 {!isLogin && (
                   <div className="mb-3">
-                    <label htmlFor="name" className="form-label text-primary">Employee Name</label>
+                    <label htmlFor="name" className="form-label">Employee Name</label>
                     <input
                       type="text"
                       id="name"
@@ -154,20 +295,20 @@ const Dashboard = () => {
                 )}
 
                 <div className="mb-3">
-                  <label htmlFor="loginId" className="form-label text-primary"> EMAIL ID</label>
+                  <label htmlFor="loginId" className="form-label">Email ID or Company ID</label>
                   <input
                     type="text"
                     id="loginId"
                     className="form-control"
-                    placeholder="Enter your EMAIL ID"
+                    placeholder="Enter your Email or Company ID"
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
-                      required
+                    required
                   />
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="password" className="form-label text-primary">Password</label>
+                  <label htmlFor="password" className="form-label">Password</label>
                   <input
                     type="password"
                     id="password"
@@ -181,7 +322,7 @@ const Dashboard = () => {
 
                 {!isLogin && (
                   <div className="mb-4">
-                    <label htmlFor="confirmPassword" className="form-label text-primary">Confirm Password</label>
+                    <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
                     <input
                       type="password"
                       id="confirmPassword"
@@ -195,12 +336,12 @@ const Dashboard = () => {
                 )}
 
                 {errorMessage && (
-                  <div className={`alert ${errorMessage.includes("success") ? "alert-success" : "alert-danger"} mt-3`}>
+                  <div className={`alert ${errorMessage.includes("successfully") ? "alert-success" : "alert-danger"} mt-3`}>
                     {errorMessage}
                   </div>
                 )}
 
-                <button type="submit" className={`btn w-100 mb-3 ${isLogin ? "btn-primary" : "btn-info text-white"}`} disabled={loading}>
+                <button type="submit" className="btn btn-submit w-100 mt-3" disabled={loading}>
                   {loading ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -211,13 +352,12 @@ const Dashboard = () => {
                   )}
                 </button>
               </form>
-              <div className="text-center">
-                <button className="btn btn-link text-decoration-none text-secondary" onClick={() => setIsLogin(!isLogin)}>
+              <div className="text-center mt-4">
+                <button className="btn btn-link btn-toggle" onClick={() => setIsLogin(!isLogin)}>
                   {isLogin ? "Don't have an account? Register here" : "Already have an account? Login here"}
                 </button>
-                {/* New link for company registration */}
                 <p className="mt-3">
-                  <a href="/register-company" className="btn btn-link text-decoration-none text-success">
+                  <a href="/register-company" className="link-company-reg">
                     Register Your Company or Shop Here (अपनी कंपनी या दुकान यहाँ रजिस्टर करें)
                   </a>
                 </p>
@@ -227,49 +367,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <footer className="bg-primary text-light text-center py-3 mt-5">
+      <footer className="footer">
         <div className="container">
           <small>© {new Date().getFullYear()} Nectar Infotel. All rights reserved.</small>
         </div>
       </footer>
-
-      <style jsx="true">{`
-        body {
-          background-color: #e6f0ff;
-        }
-        .welcome-box {
-          background: linear-gradient(to right, #66b2ff, #3399ff);
-          padding: 40px;
-          border-bottom-left-radius: 20%;
-          border-bottom-right-radius: 20%;
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-          margin-top: -16px;
-        }
-        .form-card {
-          background: #f0f8ff;
-          border-radius: 15px;
-          transition: all 0.3s ease-in-out;
-        }
-        .form-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-        .form-label {
-          font-weight: 600;
-        }
-        .btn-primary, .btn-info {
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-        input:focus {
-          border-color: #0d6efd;
-          box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-        }
-        ::placeholder {
-          color: #b0c4de;
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 

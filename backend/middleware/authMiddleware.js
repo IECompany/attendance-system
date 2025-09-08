@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Make sure you have this in your .env file
 const JWT_SECRET = process.env.JWT_SECRET || 'your_very_secret_jwt_key';
 
 const protect = async (req, res, next) => {
@@ -8,19 +9,21 @@ const protect = async (req, res, next) => {
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
+            // Get token from header
             token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, JWT_SECRET);
-            console.log("Decoded token:", decoded);
 
+            // Verify token
+            const decoded = jwt.verify(token, JWT_SECRET);
+
+            // Find user by ID from the token
             req.user = await User.findById(decoded.id).select('-password');
-            console.log("User found:", req.user);
 
             if (!req.user) {
                 return res.status(401).json({ message: 'Not authorized, user not found' });
             }
 
+            // Attach companyId to the request for easy access
             req.companyId = req.user.companyId || null;
-            console.log("User companyId:", req.companyId);
 
             next();
         } catch (error) {
@@ -34,23 +37,12 @@ const protect = async (req, res, next) => {
 
 const authorize = (...allowedUserTypes) => {
     return (req, res, next) => {
-        console.log('Authorize middleware:', {
-            userType: req.user?.userType,
-            companyId: req.companyId,
-            allowedUserTypes
-        });
-
-        // Superadmins bypass companyId check
-        if (
-            !req.companyId &&
-            !['global_superadmin', 'superadmin'].includes(req.user.userType)
-        ) {
-            console.log('Access denied: No companyId and user is not superadmin.');
-            return res.status(403).json({ message: 'Access denied: Company ID not found for user.' });
+        if (!req.user) {
+            return res.status(401).json({ message: 'User not authenticated.' });
         }
-
+        
+        // Check if the user's role is in the list of allowed roles
         if (!allowedUserTypes.includes(req.user.userType)) {
-            console.log('Access denied: User role not allowed.');
             return res.status(403).json({ message: 'Access denied: You do not have the required role.' });
         }
 

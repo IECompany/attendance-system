@@ -15,7 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { Alert, Nav, Spinner, Button } from "react-bootstrap";
 import AdminVisitsTable from "../components/AdminVisitsTable";
-import BulkUserRegistration from '../components/BulkUserRegistration';
+import BulkUserregistration from "../components/BulkUserregistration";
 import UserManagement from '../components/UserManagement';
 import EmployeeSalaryInformation from '../components/EmployeeSalaryInformation';
 

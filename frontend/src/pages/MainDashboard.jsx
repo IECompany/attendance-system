@@ -9,7 +9,7 @@ import Message from '../components/Message';
 import SubmissionTable from "../components/SubmissionTable";
 
 // API Base URL
-const API_BASE_URL = "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 // Define invalidLocations here, outside of any function scope
 const INVALID_LOCATIONS = [

@@ -21,7 +21,7 @@ const Dashboard = () => {
   useEffect(() => {
     setErrorMessage("");
   }, [isLogin]);
-
+console.log("API_BASE_URL from env:", API_BASE_URL);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

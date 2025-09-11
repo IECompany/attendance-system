@@ -21,7 +21,7 @@ const Dashboard = () => {
   useEffect(() => {
     setErrorMessage("");
   }, [isLogin]);
-console.log("API_BASE_URL from env:", API_BASE_URL);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -35,8 +35,14 @@ console.log("API_BASE_URL from env:", API_BASE_URL);
           body: JSON.stringify({ loginId, password }),
         });
 
-        const data = await res.json();
-
+       let data;
+try {
+  const text = await res.text();
+  data = text ? JSON.parse(text) : {};
+} catch (parseError) {
+  console.error("Failed to parse response JSON:", parseError);
+  data = {};
+}
         console.log('Login API Response Status:', res.status);
         console.log('Login API Response Data:', data);
         if (data && data.user) {

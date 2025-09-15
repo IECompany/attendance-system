@@ -29,42 +29,54 @@ const Dashboard = () => {
 
     try {
       if (isLogin) {
-       fetch(`${API_BASE_URL}/login`, {
+        // CORRECTED: Await the fetch call and store the response in a variable.
+        const res = await fetch(`${API_BASE_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ loginId, password }),
         });
-
-       let data;
-try {
-  const text = await res.text();
-  data = text ? JSON.parse(text) : {};
-} catch (parseError) {
-  console.error("Failed to parse response JSON:", parseError);
-  data = {};
-}
-        console.log('Login API Response Status:', res.status);
-        console.log('Login API Response Data:', data);
-        if (data && data.user) {
-            console.log('User Type from Response:', data.user.userType);
-            console.log('Company ID from Response:', data.user.companyId);
-            console.log('User Name from Response:', data.user.name);
-            console.log('User ID from Response:', data.user.userId);
-        } else {
-            console.log('User data not found in response.');
-        }
-
-        if (!res.ok) {
-          setErrorMessage(data.message || data.details || "Login failed");
+        
+        // This is the correct way to parse and handle the response
+        let data;
+        try {
+          data = await res.json();
+        } catch (parseError) {
+          // If the server returns a non-JSON response (e.g., an empty body), this will catch it.
+          console.error("Failed to parse response JSON:", parseError);
+          setErrorMessage("Failed to process server response. Please check server logs.");
+          setLoading(false);
           return;
         }
 
+        console.log('Login API Response Status:', res.status);
+        console.log('Login API Response Data:', data);
+        
+        // Handle server-side errors
+        if (!res.ok) {
+          setErrorMessage(data.message || "Login failed due to a server error.");
+          setLoading(false);
+          return;
+        }
+
+        // Check for user data within the parsed response
+        if (!data || !data.user) {
+          console.log('User data not found in response.');
+          setErrorMessage(data.message || "Login failed. User data is missing from the response.");
+          setLoading(false);
+          return;
+        }
+
+        console.log('User Type from Response:', data.user.userType);
+        console.log('Company ID from Response:', data.user.companyId);
+        console.log('User Name from Response:', data.user.name);
+        console.log('User ID from Response:', data.user.userId);
+        
         const { token, user } = data;
         
         console.log('Calling useAuth login with user:', user);
         console.log('Calling useAuth login with token:', token ? 'present' : 'missing');
         login(user, token);
-
+        
         console.log('Attempting redirection based on userType:', user.userType);
         if (user.userType === "superadmin") {
           navigate("/super-admin-panel");
@@ -74,31 +86,34 @@ try {
           navigate("/user-dashboard");
         }
 
-      } else {
+      } else { // Registration
         if (password !== confirmPassword) {
           setErrorMessage("Passwords do not match!");
+          setLoading(false);
           return;
         }
-
+        
         const tempCompanyId = "60c72b2f9b1e8e001c8e8e8e"; // Placeholder - REPLACE with actual logic
-
-          fetch(`${API_BASE_URL}/register`, {
+        
+        // CORRECTED: Await the fetch and store the response.
+        const res = await fetch(`${API_BASE_URL}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email: loginId, password, companyId: tempCompanyId }),
         });
-
+        
         const data = await res.json();
-
+        
         if (!res.ok) {
           setErrorMessage(data.message || "Registration failed");
+          setLoading(false);
           return;
         }
-
+        
         const { token, user } = data;
-
+        
         login(user, token);
-
+        
         setErrorMessage("Registered and logged in successfully!");
         setTimeout(() => {
           if (user.userType === "superadmin") {

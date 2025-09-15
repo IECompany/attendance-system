@@ -29,7 +29,7 @@ const Dashboard = () => {
 
     try {
       if (isLogin) {
-        const res = await fetch(`${API_BASE_URL}/login`, {
+       const res = await fetch(`${API_BASE_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ loginId, password }),
@@ -82,7 +82,7 @@ try {
 
         const tempCompanyId = "60c72b2f9b1e8e001c8e8e8e"; // Placeholder - REPLACE with actual logic
 
-        const res = await fetch(`${API_BASE_URL}/register`, {
+        const res = await fetch(`${API_BASE_URL}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email: loginId, password, companyId: tempCompanyId }),

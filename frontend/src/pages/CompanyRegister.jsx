@@ -84,12 +84,17 @@ const CompanyRegister = () => {
     <>
       <style jsx="true">{`
         :root {
-          --ui-orange: #FF8F00;
-          --ui-turquoise: #00796B;
-          --ui-white: #FAFAFA;
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF;
+          --ui-blue-dark: #0D47A1;
+
+          /* --- Neutral Colors --- */
+          --ui-white: #FFFFFF;
           --ui-dark: #333;
           --ui-gray: #6c757d;
           --ui-light-gray: #f8f9fa;
+          
+          /* --- UI Effects --- */
           --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
           --transition-speed: 0.3s;
         }
@@ -118,7 +123,7 @@ const CompanyRegister = () => {
         .register-heading {
           text-align: center;
           font-weight: 700;
-          color: var(--ui-turquoise);
+          color: var(--ui-blue-primary);
           font-size: 2rem;
           margin-bottom: 2rem;
         }
@@ -129,7 +134,7 @@ const CompanyRegister = () => {
           color: var(--ui-dark);
           margin-top: 2rem;
           margin-bottom: 1.5rem;
-          border-left: 4px solid var(--ui-orange);
+          border-left: 4px solid var(--ui-blue-primary);
           padding-left: 1rem;
         }
         
@@ -153,15 +158,15 @@ const CompanyRegister = () => {
         }
         
         .form-control:focus {
-            border-color: var(--ui-turquoise);
+            border-color: var(--ui-blue-primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+            box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.15);
         }
         
         .btn-register {
             width: 100%;
             padding: 1rem;
-            background-color: var(--ui-turquoise);
+            background-color: var(--ui-blue-primary);
             color: var(--ui-white);
             border: none;
             border-radius: 8px;
@@ -172,7 +177,7 @@ const CompanyRegister = () => {
         }
 
         .btn-register:hover {
-            background-color: #005f54;
+            background-color: var(--ui-blue-dark);
             transform: translateY(-2px);
         }
 

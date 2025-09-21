@@ -480,14 +480,17 @@ const MainDashboard = () => {
     <>
       <style jsx="true">{`
         :root {
-          --ui-orange: #FF8F00;
-          --ui-turquoise: #00796B;
-          --ui-dark-turquoise: #004d40;
-          --ui-white: #FAFAFA;
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF;
+          --ui-blue-dark: #0D47A1;
+          
+          /* --- Neutral Colors --- */
+          --ui-white: #FFFFFF;
           --ui-dark: #333;
           --ui-gray: #6c757d;
-          --ui-light-blue: #e7f0ff;
           --ui-dashboard-bg: #f4f7f9;
+
+          /* --- UI Effects --- */
           --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
           --transition-speed: 0.3s;
         }
@@ -502,14 +505,14 @@ const MainDashboard = () => {
         }
 
         .app-header {
-          background-color: var(--ui-dark-turquoise);
+          background-color: var(--ui-blue-dark);
           background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-          color: var(--ui-orange);
+          color: var(--ui-white);
           padding: 1rem 1.5rem;
           display: flex;
           align-items: center;
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-          border-bottom: 3px solid var(--ui-orange);
+          border-bottom: 3px solid var(--ui-blue-primary);
           justify-content: space-between;
         }
         
@@ -520,13 +523,13 @@ const MainDashboard = () => {
         }
 
         .greeting-card {
-          background-image: linear-gradient(45deg, var(--ui-turquoise), #005f54);
+          background-image: linear-gradient(45deg, var(--ui-blue-primary), var(--ui-blue-dark));
           color: white;
           padding: 2rem 1rem;
           text-align: center;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           border-radius: 0 0 25px 25px;
-          border-bottom: 3px solid var(--ui-orange);
+          border-bottom: 3px solid var(--ui-blue-primary);
         }
         
         .panel-card {
@@ -555,8 +558,8 @@ const MainDashboard = () => {
         }
 
         .form-control-custom:focus {
-          border-color: var(--ui-turquoise);
-          box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+          border-color: var(--ui-blue-primary);
+          box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.15);
           outline: none;
         }
 
@@ -568,13 +571,13 @@ const MainDashboard = () => {
         }
 
         .btn-primary-custom {
-          background-image: linear-gradient(to right, var(--ui-turquoise), var(--ui-dark-turquoise));
+          background-image: linear-gradient(to right, var(--ui-blue-primary), var(--ui-blue-dark));
           color: var(--ui-white);
           border: none;
         }
 
         .btn-primary-custom:hover {
-          background-image: linear-gradient(to right, var(--ui-dark-turquoise), var(--ui-turquoise));
+          background-image: linear-gradient(to right, var(--ui-blue-dark), var(--ui-blue-primary));
           transform: translateY(-2px);
         }
 
@@ -590,14 +593,14 @@ const MainDashboard = () => {
           transform: translateY(-2px);
         }
         
-        .btn-orange-custom {
-          background-image: linear-gradient(to right, var(--ui-orange), #c46d00);
+        .btn-orange-custom { /* Re-styled as primary blue */
+          background-image: linear-gradient(to right, var(--ui-blue-primary), var(--ui-blue-dark));
           color: var(--ui-white);
           border: none;
         }
         
-        .btn-orange-custom:hover {
-          background-image: linear-gradient(to right, #c46d00, var(--ui-orange));
+        .btn-orange-custom:hover { /* Re-styled as primary blue hover */
+          background-image: linear-gradient(to right, var(--ui-blue-dark), var(--ui-blue-primary));
           transform: translateY(-2px);
         }
 
@@ -611,7 +614,7 @@ const MainDashboard = () => {
         }
 
         .btn-logout-custom:hover {
-            color: var(--ui-orange);
+            color: var(--ui-blue-primary);
         }
 
         .camera-preview-container {
@@ -667,8 +670,8 @@ const MainDashboard = () => {
         }
 
         .ad-space {
-          border: 2px dashed var(--ui-orange);
-          background-color: #fff8f0;
+          border: 2px dashed var(--ui-blue-primary);
+          background-color: #f8faff;
           border-radius: 15px;
           text-align: center;
           padding: 40px;
@@ -719,7 +722,7 @@ const MainDashboard = () => {
                   <motion.div whileHover={{ scale: 1.05 }} className="card text-center panel-card"
                     onClick={handleShowAttendance} style={{ cursor: "pointer" }}>
                     <div className="card-body">
-                      <FaSignInAlt size={48} color="var(--ui-turquoise)" className="mb-3" />
+                      <FaSignInAlt size={48} color="var(--ui-blue-primary)" className="mb-3" />
                       <h5 className="card-title">Attendance Panel</h5>
                       <p className="card-text text-muted">Submit your attendance here.</p>
                       <button className="btn btn-primary-custom w-75">Start</button>
@@ -730,7 +733,7 @@ const MainDashboard = () => {
                   <motion.div whileHover={{ scale: 1.05 }} className="card text-center panel-card"
                     onClick={() => { setViewAttendance(true); }} style={{ cursor: "pointer" }}>
                     <div className="card-body">
-                      <FaFileAlt size={48} color="var(--ui-orange)" className="mb-3" />
+                      <FaFileAlt size={48} color="var(--ui-blue-primary)" className="mb-3" />
                       <h5 className="card-title">Attendance Submission</h5>
                       <p className="card-text text-muted">View your attendance history.</p>
                       <button className="btn btn-secondary-custom w-75">View History</button>
@@ -746,7 +749,7 @@ const MainDashboard = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
                 <div className="col-md-10">
                   <div className="card text-center panel-card">
-                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Choose Your Action</h4>
+                    <h4 className="mb-4" style={{ color: "var(--ui-blue-primary)" }}>Choose Your Action</h4>
                     <div className="d-flex justify-content-around mb-3">
                       <motion.button whileHover={{ scale: 1.05 }} className="btn btn-primary-custom btn-lg w-40" onClick={handleCheckinClick}>
                         Check-in 🚀
@@ -769,7 +772,7 @@ const MainDashboard = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
                 <div className="col-md-10">
                   <div className="card panel-card">
-                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Check-in Details</h4>
+                    <h4 className="mb-4" style={{ color: "var(--ui-blue-primary)" }}>Check-in Details</h4>
 
                     <div className="mb-3">
                       <label className="form-label-custom">Your Name</label>
@@ -833,12 +836,12 @@ const MainDashboard = () => {
                         {currentLabelIndex < requiredPhotosCheckin.length ? (
                           <>
                             <div className="d-flex align-items-center mb-3 p-3">
-                              <FaCamera size={40} color="var(--ui-turquoise)" className="me-3" />
+                              <FaCamera size={40} color="var(--ui-blue-primary)" className="me-3" />
                               <h5 className="mb-0">{requiredPhotosCheckin[currentLabelIndex]}</h5>
                             </div>
                             <div className="camera-preview-container mb-3 position-relative">
                               {loading && (<div className="spinner-overlay d-flex justify-content-center align-items-center">
-                                <div className="spinner-border" style={{ color: "var(--ui-orange)" }} role="status"></div>
+                                <div className="spinner-border" style={{ color: "var(--ui-blue-primary)" }} role="status"></div>
                               </div>)}
                               <video ref={videoRef} autoPlay playsInline></video>
                               <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
@@ -865,7 +868,7 @@ const MainDashboard = () => {
                     </div>
 
                     <div className="mb-3 text-center">
-                      <FaMapMarkerAlt className="me-2" color="var(--ui-turquoise)" /> <strong>Current Location:</strong> {locationName} <br />
+                      <FaMapMarkerAlt className="me-2" color="var(--ui-blue-primary)" /> <strong>Current Location:</strong> {locationName} <br />
                       <small>
                         Lat: {location.lat?.toFixed(5) || "--"} | Lon: {location.lon?.toFixed(5) || "--"}
                       </small>
@@ -890,10 +893,10 @@ const MainDashboard = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
                 <div className="col-md-10">
                   <div className="card panel-card">
-                    <h4 className="mb-3" style={{ color: "var(--ui-orange)" }}>Check-out Details</h4>
+                    <h4 className="mb-3" style={{ color: "var(--ui-blue-primary)" }}>Check-out Details</h4>
 
                     <div className="mb-3 text-center">
-                      <FaMapMarkerAlt className="me-2" color="var(--ui-orange)" /> <strong>Current Location:</strong> {locationName} <br />
+                      <FaMapMarkerAlt className="me-2" color="var(--ui-blue-primary)" /> <strong>Current Location:</strong> {locationName} <br />
                       <small>
                         Lat: {location.lat?.toFixed(5) || "--"} | Lon: {location.lon?.toFixed(5) || "--"}
                       </small>
@@ -915,12 +918,12 @@ const MainDashboard = () => {
                         {currentLabelIndex < requiredPhotosCheckout.length ? (
                           <>
                             <div className="d-flex align-items-center mb-3 p-3">
-                              <FaCamera size={40} color="var(--ui-orange)" className="me-3" />
+                              <FaCamera size={40} color="var(--ui-blue-primary)" className="me-3" />
                               <h5 className="mb-0">{requiredPhotosCheckout[currentLabelIndex]}</h5>
                             </div>
                             <div className="camera-preview-container mb-3 position-relative">
                               {loading && (<div className="spinner-overlay d-flex justify-content-center align-items-center">
-                                <div className="spinner-border" style={{ color: "var(--ui-orange)" }} role="status"></div>
+                                <div className="spinner-border" style={{ color: "var(--ui-blue-primary)" }} role="status"></div>
                               </div>)}
                               <video ref={videoRef} autoPlay playsInline></video>
                               <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
@@ -963,12 +966,12 @@ const MainDashboard = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
                 <div className="col-md-12">
                   <div className="card panel-card">
-                    <h4 className="mb-4" style={{ color: "var(--ui-turquoise)" }}>Attendance Submission History</h4>
+                    <h4 className="mb-4" style={{ color: "var(--ui-blue-primary)" }}>Attendance Submission History</h4>
                     <SubmissionTable erpId={user?.email || userERPId} />
-                     {/* Ad Space 2: Placed within the attendance history view */}
-                     <div className="ad-space mt-4">
-                       <p>Advertisement</p>
-                     </div>
+                      {/* Ad Space 2: Placed within the attendance history view */}
+                      <div className="ad-space mt-4">
+                        <p>Advertisement</p>
+                      </div>
                     <button className="btn btn-secondary-custom w-100 mt-3" onClick={() => setViewAttendance(false)}>Back</button>
                   </div>
                 </div>

@@ -5,9 +5,12 @@ import * as XLSX from "xlsx";
 import { Alert, Spinner, Button, Nav, Tabs, Tab, Form, Row, Col } from "react-bootstrap";
 import { useAuth } from '../authContext';
 
+// Define the API base URL using an environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+
 const BulkUserRegistration = () => {
   const { user, token, logout } = useAuth();
-  const [key, setKey] = useState('single'); // Single tab first by default
+  const [key, setKey] = useState('single');
 
   // State for Bulk Upload
   const [file, setFile] = useState(null);
@@ -74,7 +77,7 @@ const BulkUserRegistration = () => {
     setGeneratedPassword("");
 
     try {
-      const res = await fetch("http://localhost:5001/api/admin/register-single-user", {
+      const res = await fetch(`${API_BASE_URL}/admin/register-single-user`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(formData),
@@ -132,7 +135,7 @@ const BulkUserRegistration = () => {
       const formData = new FormData();
       formData.append("excelFile", file);
 
-      const res = await fetch("http://localhost:5001/api/admin/bulk-register-users", {
+      const res = await fetch(`${API_BASE_URL}/admin/bulk-register-users`, {
         method: "POST",
         headers: {
           'Authorization': headers.Authorization,
@@ -167,7 +170,7 @@ const BulkUserRegistration = () => {
       "Employee Id", "Employee Name", "Date of Birth", "Contact No",
       "Professional Email", "Personal Email", "Department / Designation",
       "Date of Joining", "Current CTC (Annual)", "Monthly In-Hand Salary (Net Payable)",
-      "Basic Pay (Monthly)", "PF Deduction (Monthly)", "ESI Deduction (Monthly)", 
+      "Basic Pay (Monthly)", "PF Deduction (Monthly)", "ESI Deduction (Monthly)",
       "Professional Tax (Monthly)", "Incentives / Bonus (Monthly)"
     ];
     const sampleRow = [

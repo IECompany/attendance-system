@@ -10,7 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 import SalarySlipTemplate from './SalarySlipTemplate';
 import { Modal, Button, Form, InputNumber } from 'antd';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api/admin";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/admin'|| "http://localhost:5001/api/admin";
 
 const EmployeeSalaryInformation = () => {
     const { user, token, logout } = useAuth();

@@ -1,49 +1,46 @@
-// components/AdminVisitsTable.js - UPDATED for Multi-Tenancy
-
-import React, { useState, useMemo, useCallback } from 'react'; // Added useCallback
+import React, { useState, useMemo, useCallback } from 'react';
+import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Modal, Image, Spinner, Alert, Table, Collapse, Nav, Tab, Form, Row, Col } from 'react-bootstrap';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa';
+import { useAuth } from '../authContext';
 
-import { useAuth } from '../authContext'; // <-- NEW: Import useAuth context
+// <-- The API URL should be defined here or imported from a config file -->
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 const AdminVisitsTable = ({ visits, loading, error }) => {
-  const { user, token, logout } = useAuth(); // <-- NEW: Get user, token, and logout from AuthContext
+  const { user, token, logout } = useAuth();
 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedVisitPhotos, setSelectedVisitPhotos] = useState([]);
   const [selectedVisitErpId, setSelectedVisitErpId] = useState("");
   const [expandedRows, setExpandedRows] = useState({});
-  const [activeTab, setActiveTab] = useState('normal'); // 'normal' or 'se'
+  const [activeTab, setActiveTab] = useState('normal');
 
   // --- Filter States ---
   const [selectedState, setSelectedState] = useState('All States');
   const [selectedDCCB, setSelectedDCCB] = useState('All Offices');
   const [selectedOccupation, setSelectedOccupation] = useState('All Occupations');
 
-  // --- NEW: Helper to get authenticated headers ---
+  // --- Helper to get authenticated headers ---
   const getAuthHeaders = useCallback(() => {
     if (!token || !user || !user.companyId) {
-      // If token or companyId is missing, it means user is not properly authenticated
-      // or session is invalid. Redirect to login.
       alert("Session expired or invalid. Please log in again.");
-      logout(); // Use logout function from context
+      logout();
       return null;
     }
     return {
       'Authorization': `Bearer ${token}`,
       'X-Company-ID': user.companyId
     };
-  }, [token, user, logout]); // Dependencies for useCallback
+  }, [token, user, logout]);
 
   // Memoize normal and SE visits
   const { normalVisits, seVisits } = useMemo(() => {
     const normal = [];
     const se = [];
     visits.forEach(visit => {
-      // Ensure visit.checkin exists before accessing its properties
       if (visit.checkin?.occupation === "SE") {
         se.push(visit);
       } else {
@@ -111,8 +108,6 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
 
   const handleShowPhotoModal = (visit) => {
     const photos = [];
-
-    // Add Check-in Photos
     if (visit.checkin && visit.checkin.photos && visit.checkin.photos.length > 0) {
       visit.checkin.photos.forEach((photo) => {
         photos.push({
@@ -122,8 +117,6 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
         });
       });
     }
-
-    // Add Checkout Photos (if exists and is an array)
     if (visit.checkout && visit.checkout.photos && Array.isArray(visit.checkout.photos) && visit.checkout.photos.length > 0) {
       visit.checkout.photos.forEach((photo) => {
         photos.push({
@@ -133,7 +126,6 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
         });
       });
     }
-
     setSelectedVisitPhotos(photos);
     setSelectedVisitErpId(visit.erpId);
     setShowPhotoModal(true);
@@ -167,14 +159,13 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
   };
 
   const downloadSinglePhoto = async (photoUrl, filename) => {
-    const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-    if (!headers) return; // Exit if headers are not available
+    const headers = getAuthHeaders();
+    if (!headers) return;
 
     try {
-      // Use the backend proxy route for image download, passing headers
-      const response = await fetch(`http://localhost:5001/api/download-image?url=${encodeURIComponent(photoUrl)}`, {
+      const response = await fetch(`${API_BASE_URL}/download-image?url=${encodeURIComponent(photoUrl)}`, {
         method: 'GET',
-        headers: headers // <-- NEW: Pass authentication headers to the proxy
+        headers: headers
       });
 
       if (!response.ok) throw new Error(`Failed to download photo: ${response.statusText}`);
@@ -192,8 +183,8 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
       return;
     }
 
-    const headers = getAuthHeaders(); // <-- NEW: Get authenticated headers
-    if (!headers) return; // Exit if headers are not available
+    const headers = getAuthHeaders();
+    if (!headers) return;
 
     const zip = new JSZip();
     const folderName = `${selectedVisitErpId || 'visit'}_all_photos`;
@@ -201,10 +192,9 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
 
     const downloadPromises = selectedVisitPhotos.map(async (photo) => {
       try {
-        // Use the backend proxy route for image download, passing headers
-        const response = await fetch(`http://localhost:5001/api/download-image?url=${encodeURIComponent(photo.url)}`, {
+        const response = await fetch(`${API_BASE_URL}/download-image?url=${encodeURIComponent(photo.url)}`, {
           method: 'GET',
-          headers: headers // <-- NEW: Pass authentication headers to the proxy
+          headers: headers
         });
         
         if (!response.ok) {

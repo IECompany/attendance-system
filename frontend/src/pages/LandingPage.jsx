@@ -21,11 +21,17 @@ const LandingPage = () => {
     <>
       <style jsx="true">{`
         :root {
-          --ui-orange: #FF8F00;
-          --ui-turquoise: #00796B;
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF; /* Main vibrant blue */
+          --ui-blue-dark: #0D47A1;    /* Darker shade for gradients */
+          --ui-blue-light: #E3F2FD;   /* Light background for icons */
+          
+          /* --- Neutral Colors --- */
           --ui-white: #FAFAFA;
           --ui-dark: #333;
           --ui-gray: #6c757d;
+          
+          /* --- UI Effects --- */
           --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
           --transition-speed: 0.3s;
         }
@@ -37,7 +43,7 @@ const LandingPage = () => {
         }
 
         .hero-section {
-          background: linear-gradient(135deg, var(--ui-turquoise) 0%, #004d40 100%);
+          background: linear-gradient(135deg, var(--ui-blue-primary) 0%, var(--ui-blue-dark) 100%);
           color: var(--ui-white);
           padding: 120px 0;
           text-align: center;
@@ -70,7 +76,7 @@ const LandingPage = () => {
         }
 
         .btn-get-started {
-          background-color: var(--ui-orange);
+          background-color: var(--ui-blue-primary);
           color: var(--ui-white);
           font-weight: 600;
           padding: 14px 32px;
@@ -81,7 +87,7 @@ const LandingPage = () => {
 
         .btn-get-started:hover {
           transform: translateY(-3px);
-          box-shadow: 0 8px 20px rgba(255, 143, 0, 0.3);
+          box-shadow: 0 8px 20px rgba(41, 98, 255, 0.35);
         }
 
         .features-section {
@@ -91,7 +97,7 @@ const LandingPage = () => {
         .section-heading {
           font-weight: 700;
           font-size: 2.5rem;
-          color: var(--ui-turquoise);
+          color: var(--ui-blue-primary);
           margin-bottom: 50px;
           position: relative;
           display: inline-block;
@@ -105,7 +111,7 @@ const LandingPage = () => {
             transform: translateX(-50%);
             width: 60px;
             height: 4px;
-            background-color: var(--ui-orange);
+            background-color: var(--ui-blue-primary);
             border-radius: 2px;
         }
 
@@ -124,8 +130,8 @@ const LandingPage = () => {
         }
 
         .feature-icon-wrapper {
-          background-color: #e0f2f1;
-          color: var(--ui-turquoise);
+          background-color: var(--ui-blue-light);
+          color: var(--ui-blue-primary);
           width: 70px;
           height: 70px;
           border-radius: 50%;
@@ -151,7 +157,7 @@ const LandingPage = () => {
         }
         
         .cta-banner {
-            background: linear-gradient(45deg, var(--ui-orange), #ffc107);
+            background: linear-gradient(45deg, var(--ui-blue-primary), var(--ui-blue-dark));
             color: var(--ui-white);
             padding: 50px;
             border-radius: 15px;
@@ -171,12 +177,12 @@ const LandingPage = () => {
         }
         
         .ad-space {
-          border: 2px dashed var(--ui-turquoise);
-          background-color: #f7fcfc;
+          border: 2px dashed var(--ui-blue-primary);
+          background-color: #f8faff; /* Light blue-tinted white */
           border-radius: 15px;
           text-align: center;
           padding: 30px;
-          margin: 50px 0; /* Updated margin for spacing */
+          margin: 50px 0;
         }
         
         .ad-space p {
@@ -184,7 +190,7 @@ const LandingPage = () => {
         }
 
         .footer {
-          background-color: var(--ui-turquoise);
+          background-color: var(--ui-blue-primary);
           color: var(--ui-white);
           padding: 20px 0;
           text-align: center;

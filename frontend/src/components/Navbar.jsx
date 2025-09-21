@@ -1,23 +1,23 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaFingerprint } from "react-icons/fa"; // You can use this for the logo
+import { FaFingerprint } from "react-icons/fa";
 
 const Navbar = () => {
   return (
     <>
       <style jsx="true">{`
         :root {
-          --ui-orange: #FF8F00;
-          --ui-turquoise: #00796B;
-          --ui-dark-turquoise: #004d40;
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF; /* Main vibrant blue for accents */
+          --ui-blue-dark: #0D47A1;    /* Darker shade for the navbar background */
           --ui-white: #FAFAFA;
         }
 
         .navbar {
-          background-color: var(--ui-dark-turquoise);
-          background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+          background-color: var(--ui-blue-dark);
+          background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.05' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
           padding: 1rem 0;
-          border-bottom: 3px solid var(--ui-orange);
+          border-bottom: 3px solid var(--ui-blue-primary);
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
@@ -25,12 +25,12 @@ const Navbar = () => {
           font-family: 'Poppins', sans-serif;
           font-weight: 700;
           font-size: 1.75rem;
-          color: var(--ui-orange) !important;
+          color: var(--ui-white) !important; /* Changed to white for better contrast */
           transition: color 0.3s ease;
         }
         
         .navbar-brand:hover {
-          color: #ffc107 !important;
+          color: #bbdefb !important; /* A light blue for hover */
         }
 
         .navbar-toggler {
@@ -56,7 +56,7 @@ const Navbar = () => {
           transform: translateX(-50%);
           width: 0;
           height: 2px;
-          background-color: var(--ui-orange);
+          background-color: var(--ui-blue-primary); /* Accent color for the underline */
           transition: width 0.3s ease;
         }
         

@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
     FaDownload,
-    FaMapMarkedAlt,
+    FaMapLocationDot, // Corrected: Replaced FaMapMarkedAlt
     FaClipboardList,
     FaFilter,
     FaRedo
-} from "react-icons/fa6"; // Proactively updated to fa6 to prevent build errors
+} from "react-icons/fa6";
 import { motion } from "framer-motion";
 import { Spinner, Alert, Form, Row, Col, Button } from 'react-bootstrap';
 import AdminVisitsTable from "../components/AdminVisitsTable";
-
 import { useAuth } from '../authContext';
 
 // Define the API base URL using a more compatible environment variable syntax

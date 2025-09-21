@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa6';
+import { FaEye, FaFilter, FaRedo, FaAngleUp, FaAngleDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Modal, Image, Spinner, Alert, Table, Collapse, Nav, Tab, Form, Row, Col } from 'react-bootstrap';
-import JSZip from 'jszip';
+// JSZip is expected to be loaded from a CDN via a script tag in your index.html
+// <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 import { saveAs } from 'file-saver';
 import { useAuth } from '../authContext';
 
@@ -10,6 +11,7 @@ const API_BASE_URL = process.env.VITE_API_BASE_URL || "http://localhost:5001/api
 
 const AdminVisitsTable = ({ visits, loading, error }) => {
   const { user, token, logout } = useAuth();
+  const JSZip = window.JSZip; // Access JSZip from the window object
 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedVisitPhotos, setSelectedVisitPhotos] = useState([]);
@@ -177,6 +179,10 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
   };
 
   const downloadAllPhotosAsZip = async () => {
+    if (!JSZip) {
+        alert("Could not find JSZip library. Please ensure it's loaded correctly.");
+        return;
+    }
     if (selectedVisitPhotos.length === 0) {
       alert("No photos to download for this visit.");
       return;
@@ -320,7 +326,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
                           aria-controls={`collapse-details-${visit._id}`}
                           aria-expanded={isExpanded}
                         >
-                          {isExpanded ? <FaCompressAlt /> : <FaEye />}
+                          {isExpanded ? <FaAngleUp /> : <FaAngleDown />}
                         </Button>
                       </td>
                     </motion.tr>
@@ -601,3 +607,4 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
 };
 
 export default AdminVisitsTable;
+

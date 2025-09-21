@@ -324,30 +324,27 @@ const SuperAdminPanel = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="card shadow-sm panel-card h-100 p-0"
-            style={{ backgroundColor: "var(--ui-light-tint)" }}
+            style={{ backgroundColor: "var(--ui-white)" }}
           >
             <div className="card-header fw-bold text-white welcome-header">
               <span className="me-2">🎉</span> Welcome, Super Admin!
             </div>
             <div className="card-body">
-              <h3 className="mb-3" style={{ color: "var(--ui-orange)" }}>Your Dashboard Awaits!</h3>
+              <h3 className="mb-3" style={{ color: "var(--ui-blue-dark)" }}>Your Dashboard Awaits!</h3>
               <p>Navigate through the powerful administrative tools using the sidebar.</p>
               <hr />
               <div className="row g-3">
                 <div className="col-md-6 col-lg-4">
-                  <div className="card text-center text-white p-3 border-0" style={{ backgroundColor: "var(--ui-turquoise)" }}>
-                    <h5>Overall Total Attandance</h5>
+                  <div className="card text-center text-white p-3 border-0" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
+                    <h5>Overall Total Attendance</h5>
                     <h4 className="fw-bold">{visits.length > 0 ? visits.length : '...'}</h4>
-                    <p className="small">Fetched from Email Attandance History</p>
+                    <p className="small">Fetched from Attendance History</p>
                   </div>
                 </div>
               </div>
               <div className="ad-container mt-4 p-3 border rounded">
                 <p className="text-muted text-center mb-0">Google Ad Space</p>
-                {/* Google AdSense code will go here */}
-                {/* Add placeholder for AdSense responsive ad unit here. */}
                 <div className="ad-slot" style={{ height: '250px', backgroundColor: '#e9ecef' }}>
-                  {/* Google Ad Placeholder 1 */}
                 </div>
               </div>
             </div>
@@ -361,18 +358,18 @@ const SuperAdminPanel = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="card shadow-sm panel-card h-100 d-flex flex-column"
-            style={{ backgroundColor: "var(--ui-light-tint)" }}
+            style={{ backgroundColor: "var(--ui-white)" }}
           >
-            <div className="card-header d-flex justify-content-between align-items-center fw-bold" style={{ backgroundColor: "var(--ui-turquoise)", color: "white" }}>
+            <div className="card-header d-flex justify-content-between align-items-center fw-bold" style={{ backgroundColor: "var(--ui-blue-primary)", color: "white" }}>
               <span><FaFileCsv className="me-2" /> Download Data Reports</span>
             </div>
             <div className="card-body d-flex flex-column flex-grow-1">
-              <h5 className="mb-3" style={{ color: "var(--ui-orange)" }}>General Reports:</h5>
-              <Button className="w-100 mb-4 py-2 fs-5" onClick={handleDownloadEntireDataset} disabled={downloadLoading} style={{ backgroundColor: "var(--ui-turquoise)", border: "none" }}>
+              <h5 className="mb-3" style={{ color: "var(--ui-blue-dark)" }}>General Reports:</h5>
+              <Button className="w-100 mb-4 py-2 fs-5" onClick={handleDownloadEntireDataset} disabled={downloadLoading} style={{ backgroundColor: "var(--ui-blue-primary)", border: "none" }}>
                 {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" /> : <FaDownload className="me-2" />}
                 {downloadLoading ? 'Downloading...' : 'Download All Data'}
               </Button>
-              <h5 className="mb-3 pt-3 mt-3" style={{ color: "var(--ui-orange)", borderTop: "1px dashed #ccc" }}>Specific Reports:</h5>
+              <h5 className="mb-3 pt-3 mt-3" style={{ color: "var(--ui-blue-dark)", borderTop: "1px dashed #ccc" }}>Specific Reports:</h5>
               <div className="row g-3">
                 <div className="col-md-6 col-sm-12">
                   <label htmlFor="downloadState" className="form-label fw-bold mb-1">By State:</label>
@@ -426,16 +423,16 @@ const SuperAdminPanel = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="card shadow-sm panel-card h-100 d-flex flex-column"
-            style={{ backgroundColor: "var(--ui-light-tint)" }}
+            style={{ backgroundColor: "var(--ui-white)" }}
           >
-            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-turquoise)" }}>
+            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
               <FaUserPlus className="me-2" /> Add New Admin
             </div>
             <div className="card-body d-flex flex-column flex-grow-1">
               <form onSubmit={handleAdminRegister} className="d-flex flex-column flex-grow-1">
                 <input type="email" className="form-control mb-3" placeholder="Email Address" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} required />
                 <input type="password" className="form-control mb-4" placeholder="Password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} required />
-                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-orange)", border: "none" }}>
+                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-blue-primary)", border: "none" }}>
                   Register Admin
                 </Button>
               </form>
@@ -462,16 +459,14 @@ const SuperAdminPanel = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="card shadow-sm panel-card h-100 d-flex flex-column"
-            style={{ backgroundColor: "var(--ui-light-tint)" }}
+            style={{ backgroundColor: "var(--ui-white)" }}
           >
-            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-turquoise)" }}>
+            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
               <FaBuilding className="me-2" /> Manage Offices
             </div>
             <div className="card-body d-flex flex-column flex-grow-1">
               <form onSubmit={handleAddOffice} className="d-flex flex-column flex-grow-1">
                 <input type="text" className="form-control mb-3" placeholder="Enter New Office/DCCB Name" value={newOfficeName} onChange={(e) => setNewOfficeName(e.target.value)} required />
-
-                {/* --- NEW: Conditional rendering for state input/dropdown --- */}
                 {showAddStateInput ? (
                   <div className="d-flex align-items-center mb-3">
                     <input
@@ -482,7 +477,7 @@ const SuperAdminPanel = () => {
                       onChange={(e) => setTempNewStateName(e.target.value)}
                       required
                     />
-                    <Button onClick={handleAddState} variant="primary" className="ms-2 px-4" style={{ backgroundColor: "var(--ui-orange)", border: "none" }}>
+                    <Button onClick={handleAddState} variant="primary" className="ms-2 px-4" style={{ backgroundColor: "var(--ui-blue-primary)", border: "none" }}>
                       Add
                     </Button>
                     <Button onClick={() => setShowAddStateInput(false)} variant="secondary" className="ms-2">
@@ -502,13 +497,13 @@ const SuperAdminPanel = () => {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
-                    <Button onClick={() => setShowAddStateInput(true)} variant="link" className="ms-2 text-decoration-none" style={{ color: "var(--ui-turquoise)" }}>
+                    <Button onClick={() => setShowAddStateInput(true)} variant="link" className="ms-2 text-decoration-none" style={{ color: "var(--ui-blue-primary)" }}>
                       Add New State?
                     </Button>
                   </div>
                 )}
                 
-                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-orange)", border: "none" }}>
+                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-blue-primary)", border: "none" }}>
                   Add Office
                 </Button>
               </form>
@@ -523,260 +518,260 @@ const SuperAdminPanel = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
             className="card shadow-sm panel-card h-100 d-flex flex-column"
-            style={{ backgroundColor: "var(--ui-light-tint)" }}
+            style={{ backgroundColor: "var(--ui-white)" }}
           >
-            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-turquoise)" }}>
+            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
               <FaBriefcase className="me-2" /> Manage Occupations
             </div>
             <div className="card-body d-flex flex-column flex-grow-1">
               <form onSubmit={handleAddOccupation} className="d-flex flex-column flex-grow-1">
                 <input type="text" className="form-control mb-4" placeholder="Enter New Occupation Name" value={newOccupationName} onChange={(e) => setNewOccupationName(e.target.value)} required />
-                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-orange)", border: "none" }}>
+                <Button type="submit" className="w-100 py-2 fs-5 mt-auto" style={{ backgroundColor: "var(--ui-blue-primary)", border: "none" }}>
                   Add Occupation
                 </Button>
               </form>
             </div>
           </motion.div>
         );
-        case 'userManagement':
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="h-100"
-            >
-              <UserManagement />
-            </motion.div>
-          );
-        case 'visitsHistory':
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="card shadow-sm panel-card h-100 w-100"
-              style={{ backgroundColor: "var(--ui-light-tint)" }}
-            >
-              <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-turquoise)" }}>
-                <FaClipboardList className="me-2" /> All Employee Attendance History
-              </div>
-              <div className="card-body">
-                <AdminVisitsTable visits={visits} loading={loading} error={error} />
-              </div>
-            </motion.div>
-          );
-        case 'employeeSalaryInformation':
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className="h-100 w-100"
-            >
-              <EmployeeSalaryInformation />
-            </motion.div>
-          );
-        default:
-          return null;
-      }
-    };
-  
-    return (
-      <div
-        className="main-container"
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <header className="py-3 text-center text-white shadow-sm admin-header">
-          <h2 style={{ color: "var(--ui-orange)", fontWeight: 700, fontSize: '1.75rem' }}>
-            <SuperAdminLogo /> AI-HRMS Super Admin Panel
-          </h2>
-        </header>
-  
-        <div className="d-flex flex-grow-1">
-          <nav
-            className="p-3 shadow-lg sidebar-nav"
-            style={{
-              width: "250px",
-              flexShrink: 0,
-              overflowY: "auto",
-              minHeight: "calc(100vh - 70px)",
-            }}
+      case 'userManagement':
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="h-100"
           >
-            <h5 className="mb-4 text-center text-white">Navigation</h5>
-            <Nav className="flex-column">
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'dashboard' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('dashboard')}
-              >
-                <FaChartLine className="me-2" /> Dashboard
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'downloadReports' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('downloadReports')}
-              >
-                <FaFileCsv className="me-2" /> Download Reports
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'userManagement' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('userManagement')}
-              >
-                <FaUsers className="me-2" /> Manage Users
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'bulkUserRegistration' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('bulkUserRegistration')}
-              >
-                <FaUpload className="me-2" /> Bulk User Reg.
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'employeeSalaryInformation' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('employeeSalaryInformation')}
-              >
-                <FaMoneyBillAlt className="me-2" /> Employee Salary Info
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'addAdmin' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('addAdmin')}
-              >
-                <FaUserPlus className="me-2" /> Add Admin
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'manageOffices' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('manageOffices')}
-              >
-                <FaBuilding className="me-2" /> Manage Offices
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'manageOccupations' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('manageOccupations')}
-              >
-                <FaBriefcase className="me-2" /> Manage Occupations
-              </Nav.Link>
-              <Nav.Link
-                href="#"
-                className={`text-white py-2 ${activeSection === 'visitsHistory' ? 'active-sidebar-link' : ''}`}
-                onClick={() => setActiveSection('visitsHistory')}
-              >
-                <FaClipboardList className="me-2" /> All Employee Attandance History
-              </Nav.Link>
-            </Nav>
-            <div className="ad-container mt-4 p-2 border rounded">
-              <p className="text-muted text-center mb-0">Google Ad Space</p>
-              {/* Google AdSense code will go here */}
-              {/* Add placeholder for a smaller, square ad unit here */}
-              <div className="ad-slot" style={{ height: '100px', backgroundColor: '#e9ecef' }}>
-                {/* Google Ad Placeholder 2 */}
-              </div>
+            <UserManagement />
+          </motion.div>
+        );
+      case 'visitsHistory':
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="card shadow-sm panel-card h-100 w-100"
+            style={{ backgroundColor: "var(--ui-white)" }}
+          >
+            <div className="card-header text-white fw-bold" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
+              <FaClipboardList className="me-2" /> All Employee Attendance History
             </div>
-          </nav>
-  
-          <main className="flex-grow-1 p-4" style={{ overflowY: "auto" }}>
-            {renderContent()}
-          </main>
-        </div>
-  
-        <footer className="text-white text-center py-3 shadow-lg" style={{ backgroundColor: "var(--ui-turquoise)" }}>
-          <small>© {new Date().getFullYear()} AI-HRMS. All rights reserved.</small>
-        </footer>
-  
-        <style>{`
-          :root {
-            --ui-orange: #FF8F00;
-            --ui-turquoise: #00796B;
-            --ui-dark-turquoise: #004d40;
-            --ui-dark-turquoise-tone: #003630; /* A new darker tone for the sidebar */
-            --ui-white: #FAFAFA;
-            --ui-light-bg: #e0f2f1; /* A light tint of turquoise for the background */
-            --ui-light-tint: #b2dfdb; /* A slightly darker tint for cards */
-            --ui-dark: #333;
-            --ui-gray: #6c757d;
-            --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
-            --transition-speed: 0.3s;
-          }
-  
-          .main-container {
-            background-color: var(--ui-light-bg);
-            background-image: url("data:image/svg+xml,%3Csvg width='42' height='44' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%239e9e9e' fill-opacity='0.1'%3E%3Cpath d='M0,0 L0,44 L21,44 L21,0 L0,0 Z M21,0 L21,22 L42,22 L42,0 L21,0 Z M21,22 L21,44 L42,44 L42,22 L21,22 Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-          }
-  
-          .admin-header {
-            background-color: var(--ui-dark-turquoise) !important;
-            background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
-            background-repeat: repeat !important;
-          }
-  
-          .sidebar-nav {
-            background-color: var(--ui-dark-turquoise-tone);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--ui-white);
-          }
-  
-          .sidebar-nav .nav-link {
-            transition: background-color var(--transition-speed), color var(--transition-speed);
-            border-radius: 8px;
-          }
-  
-          .sidebar-nav .nav-link:hover, .sidebar-nav .active-sidebar-link {
-            background-color: var(--ui-turquoise);
-            color: var(--ui-white);
-          }
-  
-          .panel-card {
-            border-radius: 12px;
-            border: none;
-          }
-  
-          .panel-card .card-header {
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            border-bottom: none;
-          }
-  
-          .welcome-header {
-            background-color: var(--ui-dark-turquoise);
-            background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
-            background-repeat: repeat !important;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-            padding: 1.5rem;
-            font-size: 1.5rem;
-          }
-          
-          .ad-container {
-            background-color: rgba(255, 255, 255, 0.5);
-            border: 1px dashed #ccc !important;
-            text-align: center;
-            padding: 1rem;
-          }
-  
-          .ad-slot {
-            width: 100%;
-            min-height: 100px; /* Or other specific height for your ad format */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--ui-gray);
-            font-style: italic;
-          }
-        `}</style>
-      </div>
-    );
+            <div className="card-body">
+              <AdminVisitsTable visits={visits} loading={loading} error={error} />
+            </div>
+          </motion.div>
+        );
+      case 'employeeSalaryInformation':
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="h-100 w-100"
+          >
+            <EmployeeSalaryInformation />
+          </motion.div>
+        );
+      default:
+        return null;
+    }
   };
   
-  export default SuperAdminPanel;
+  return (
+    <div
+      className="main-container"
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <header className="py-3 text-center text-white shadow-sm admin-header">
+        <h2 style={{ color: "var(--ui-white)", fontWeight: 700, fontSize: '1.75rem' }}>
+          <SuperAdminLogo /> AI-HRMS Super Admin Panel
+        </h2>
+      </header>
+
+      <div className="d-flex flex-grow-1">
+        <nav
+          className="p-3 shadow-lg sidebar-nav"
+          style={{
+            width: "250px",
+            flexShrink: 0,
+            overflowY: "auto",
+            minHeight: "calc(100vh - 70px)",
+          }}
+        >
+          <h5 className="mb-4 text-center text-white">Navigation</h5>
+          <Nav className="flex-column">
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'dashboard' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('dashboard')}
+            >
+              <FaChartLine className="me-2" /> Dashboard
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'downloadReports' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('downloadReports')}
+            >
+              <FaFileCsv className="me-2" /> Download Reports
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'userManagement' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('userManagement')}
+            >
+              <FaUsers className="me-2" /> Manage Users
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'bulkUserRegistration' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('bulkUserRegistration')}
+            >
+              <FaUpload className="me-2" /> Bulk User Reg.
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'employeeSalaryInformation' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('employeeSalaryInformation')}
+            >
+              <FaMoneyBillAlt className="me-2" /> Employee Salary Info
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'addAdmin' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('addAdmin')}
+            >
+              <FaUserPlus className="me-2" /> Add Admin
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'manageOffices' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('manageOffices')}
+            >
+              <FaBuilding className="me-2" /> Manage Offices
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'manageOccupations' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('manageOccupations')}
+            >
+              <FaBriefcase className="me-2" /> Manage Occupations
+            </Nav.Link>
+            <Nav.Link
+              href="#"
+              className={`text-white py-2 ${activeSection === 'visitsHistory' ? 'active-sidebar-link' : ''}`}
+              onClick={() => setActiveSection('visitsHistory')}
+            >
+              <FaClipboardList className="me-2" /> All Employee Attendance History
+            </Nav.Link>
+          </Nav>
+          <div className="ad-container mt-4 p-2 border rounded">
+            <p className="text-muted text-center mb-0">Google Ad Space</p>
+            <div className="ad-slot" style={{ height: '100px', backgroundColor: '#e9ecef' }}>
+            </div>
+          </div>
+        </nav>
+
+        <main className="flex-grow-1 p-4" style={{ overflowY: "auto" }}>
+          {renderContent()}
+        </main>
+      </div>
+
+      <footer className="text-white text-center py-3 shadow-lg" style={{ backgroundColor: "var(--ui-blue-dark)" }}>
+        <small>© {new Date().getFullYear()} AI-HRMS. All rights reserved.</small>
+      </footer>
+
+      <style>{`
+        :root {
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF;
+          --ui-blue-dark: #0D47A1;
+          --ui-blue-darker-tone: #083475; /* A new darker tone for the sidebar */
+          --ui-blue-light-bg: #f0f5ff; /* A light tint of blue for the background */
+          
+          /* --- Neutral Colors --- */
+          --ui-white: #FFFFFF;
+          --ui-dark: #333;
+          --ui-gray: #6c757d;
+
+          /* --- UI Effects --- */
+          --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
+          --transition-speed: 0.3s;
+        }
+
+        .main-container {
+          background-color: var(--ui-blue-light-bg);
+          background-image: url("data:image/svg+xml,%3Csvg width='42' height='44' viewBox='0 0 42 44' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='Page-1' stroke='none' stroke-width='1' fill='none' fill-rule='evenodd'%3E%3Cg id='brick-wall' fill='%239e9e9e' fill-opacity='0.1'%3E%3Cpath d='M0,0 L0,44 L21,44 L21,0 L0,0 Z M21,0 L21,22 L42,22 L42,0 L21,0 Z M21,22 L21,44 L42,44 L42,22 L21,22 Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .admin-header {
+          background-color: var(--ui-blue-dark) !important;
+          background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
+          background-repeat: repeat !important;
+        }
+
+        .sidebar-nav {
+          background-color: var(--ui-blue-darker-tone);
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+          color: var(--ui-white);
+        }
+
+        .sidebar-nav .nav-link {
+          transition: background-color var(--transition-speed), color var(--transition-speed);
+          border-radius: 8px;
+        }
+
+        .sidebar-nav .nav-link:hover, .sidebar-nav .active-sidebar-link {
+          background-color: var(--ui-blue-primary);
+          color: var(--ui-white);
+        }
+
+        .panel-card {
+          border-radius: 12px;
+          border: none;
+        }
+
+        .panel-card .card-header {
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+          border-bottom: none;
+        }
+
+        .welcome-header {
+          background-color: var(--ui-blue-dark);
+          background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23004d40' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zm1 5v1H5z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") !important;
+          background-repeat: repeat !important;
+          border-top-left-radius: 12px;
+          border-top-right-radius: 12px;
+          padding: 1.5rem;
+          font-size: 1.5rem;
+        }
+        
+        .ad-container {
+          background-color: rgba(255, 255, 255, 0.5);
+          border: 1px dashed #ccc !important;
+          text-align: center;
+          padding: 1rem;
+        }
+
+        .ad-slot {
+          width: 100%;
+          min-height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--ui-gray);
+          font-style: italic;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default SuperAdminPanel;

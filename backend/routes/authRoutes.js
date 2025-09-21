@@ -5,7 +5,6 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const rateLimit = require('express-rate-limit');
 
 // JWT Secret from environment variable (CRITICAL: Ensure this is set)
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -15,15 +14,6 @@ if (!JWT_SECRET) {
     console.error("JWT_SECRET is not defined in environment variables!");
     process.exit(1);
 }
-
-// Rate limiting middleware
-const loginLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 5,
-    message: "Too many login attempts from this IP, please try again after an hour",
-    standardHeaders: true,
-    legacyHeaders: false,
-});
 
 // Function to generate JWT
 const generateToken = (id, companyId) => {
@@ -82,7 +72,7 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /login - Authenticates user without requiring companyId in request body
-router.post("/login", loginLimiter, async (req, res) => {
+router.post("/login", async (req, res) => {
     const { loginId, password } = req.body;
 
     try {
@@ -91,7 +81,6 @@ router.post("/login", loginLimiter, async (req, res) => {
         }
 
         // 1. Find all users matching the loginId, regardless of their company.
-        // I have corrected 'pacsId' to 'employeeId' as per your model.
         const users = await User.find({
             $or: [
                 { email: loginId },

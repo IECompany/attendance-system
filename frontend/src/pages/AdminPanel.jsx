@@ -5,15 +5,15 @@ import {
     FaClipboardList,
     FaFilter,
     FaRedo
-} from "react-icons/fa";
+} from "react-icons/fa6"; // Proactively updated to fa6 to prevent build errors
 import { motion } from "framer-motion";
 import { Spinner, Alert, Form, Row, Col, Button } from 'react-bootstrap';
 import AdminVisitsTable from "../components/AdminVisitsTable";
 
 import { useAuth } from '../authContext';
 
-// Define the API base URL using an environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+// Define the API base URL using a more compatible environment variable syntax
+const API_BASE_URL = process.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 const AdminPanel = () => {
     const { user, token, logout } = useAuth();
@@ -192,12 +192,18 @@ const AdminPanel = () => {
         <>
             <style jsx="true">{`
                 :root {
-                    --ui-orange: #FF8F00;
-                    --ui-turquoise: #00796B;
-                    --ui-white: #FAFAFA;
+                    /* --- Blue Monochromatic Palette --- */
+                    --ui-blue-primary: #2962FF;
+                    --ui-blue-dark: #0D47A1;
+
+                    /* --- Neutral Colors --- */
+                    --ui-white: #FFFFFF;
                     --ui-dark: #333;
                     --ui-gray: #6c757d;
+                    --ui-dark-gray: #5a6268;
                     --ui-light-gray: #f8f9fa;
+                    
+                    /* --- UI Effects --- */
                     --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
                     --transition-speed: 0.3s;
                 }
@@ -209,7 +215,7 @@ const AdminPanel = () => {
                 }
 
                 .admin-header {
-                    background-color: var(--ui-turquoise);
+                    background-color: var(--ui-blue-primary);
                     color: var(--ui-white);
                     padding: 3rem 0;
                     text-align: center;
@@ -241,7 +247,7 @@ const AdminPanel = () => {
                 }
 
                 .card-header-custom {
-                    background-color: var(--ui-turquoise);
+                    background-color: var(--ui-blue-primary);
                     color: var(--ui-white);
                     padding: 1rem 1.5rem;
                     font-weight: 600;
@@ -250,41 +256,41 @@ const AdminPanel = () => {
                 }
 
                 .btn-custom-primary {
-                    background-color: var(--ui-turquoise);
+                    background-color: var(--ui-blue-primary);
                     color: var(--ui-white);
                     border: none;
                     transition: all var(--transition-speed);
                 }
 
                 .btn-custom-primary:hover {
-                    background-color: #005f54;
+                    background-color: var(--ui-blue-dark);
                     transform: translateY(-2px);
                 }
 
                 .btn-custom-secondary {
-                    background-color: var(--ui-orange);
+                    background-color: var(--ui-gray);
                     color: var(--ui-white);
                     border: none;
                     transition: all var(--transition-speed);
                 }
 
                 .btn-custom-secondary:hover {
-                    background-color: #e57d00;
+                    background-color: var(--ui-dark-gray);
                     transform: translateY(-2px);
                 }
 
                 .btn-custom-outline {
-                    color: var(--ui-turquoise);
-                    border: 2px solid var(--ui-turquoise);
+                    color: var(--ui-blue-primary);
+                    border: 2px solid var(--ui-blue-primary);
                     background-color: transparent;
                     font-weight: 600;
                     transition: all var(--transition-speed);
                 }
 
                 .btn-custom-outline:hover {
-                    background-color: var(--ui-turquoise);
+                    background-color: var(--ui-blue-primary);
                     color: var(--ui-white);
-                    border-color: var(--ui-turquoise);
+                    border-color: var(--ui-blue-primary);
                 }
 
                 .form-select, .form-control {
@@ -294,7 +300,7 @@ const AdminPanel = () => {
                 }
 
                 .footer {
-                    background-color: var(--ui-turquoise);
+                    background-color: var(--ui-blue-dark);
                     color: var(--ui-white);
                     padding: 1.5rem 0;
                     text-align: center;

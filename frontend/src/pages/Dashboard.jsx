@@ -137,11 +137,16 @@ const Dashboard = () => {
     <>
       <style jsx="true">{`
         :root {
-          --ui-orange: #FF8F00;
-          --ui-turquoise: #00796B;
+          /* --- Blue Monochromatic Palette --- */
+          --ui-blue-primary: #2962FF; /* Main vibrant blue */
+          --ui-blue-dark: #0D47A1;    /* Darker shade for gradients and hovers */
+          
+          /* --- Neutral Colors --- */
           --ui-white: #FAFAFA;
           --ui-dark: #333;
           --ui-gray: #6c757d;
+
+          /* --- UI Effects --- */
           --box-shadow-light: 0 4px 12px rgba(0,0,0,0.08);
           --transition-speed: 0.3s;
         }
@@ -153,7 +158,7 @@ const Dashboard = () => {
         }
 
         .login-hero {
-          background: linear-gradient(135deg, var(--ui-turquoise) 0%, #004d40 100%);
+          background: linear-gradient(135deg, var(--ui-blue-primary) 0%, var(--ui-blue-dark) 100%);
           color: var(--ui-white);
           padding: 80px 0;
           text-align: center;
@@ -212,8 +217,8 @@ const Dashboard = () => {
         }
         
         .form-control:focus {
-          border-color: var(--ui-turquoise);
-          box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.1);
+          border-color: var(--ui-blue-primary);
+          box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.15);
         }
 
         .btn-submit {
@@ -221,13 +226,13 @@ const Dashboard = () => {
           padding: 12px;
           border-radius: 8px;
           transition: all var(--transition-speed);
-          background-color: var(--ui-turquoise);
+          background-color: var(--ui-blue-primary);
           color: var(--ui-white);
           border: none;
         }
         
         .btn-submit:hover {
-          background-color: #005f54;
+          background-color: var(--ui-blue-dark);
         }
         
         .btn-toggle {
@@ -237,17 +242,17 @@ const Dashboard = () => {
         }
         
         .btn-toggle:hover {
-            color: var(--ui-turquoise);
+            color: var(--ui-blue-primary);
         }
         
         .link-company-reg {
-            color: var(--ui-orange);
+            color: var(--ui-blue-primary);
             font-weight: 500;
             transition: color var(--transition-speed);
         }
         
         .link-company-reg:hover {
-            color: #cc7200;
+            color: var(--ui-blue-dark);
         }
 
         .footer {

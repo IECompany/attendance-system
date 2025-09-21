@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa';
+import { FaEye, FaCompressAlt, FaFilter, FaRedo } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Modal, Image, Spinner, Alert, Table, Collapse, Nav, Tab, Form, Row, Col } from 'react-bootstrap';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { useAuth } from '../authContext';
 
-// <-- The API URL should be defined here or imported from a config file -->
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+const API_BASE_URL = process.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 const AdminVisitsTable = ({ visits, loading, error }) => {
   const { user, token, logout } = useAuth();
@@ -379,7 +378,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
           <Spinner animation="border" role="status" variant="primary">
             <span className="visually-hidden">Loading all visits...</span>
           </Spinner>
-          <p className="mt-2 text-primary">Loading all visit data for admin panel...</p>
+          <p className="mt-2" style={{ color: 'var(--ui-blue-primary)' }}>Loading all visit data for admin panel...</p>
         </div>
       )}
 
@@ -392,8 +391,8 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
       {!loading && !error && visits.length > 0 && (
         <>
           {/* --- Filter Section --- */}
-          <div className="filter-section p-3 mb-4 rounded shadow-sm" style={{ backgroundColor: '#f8f9fa', border: '1px solid #e9ecef' }}>
-            <h5 className="mb-3 text-primary"><FaFilter className="me-2" />Apply Filters</h5>
+          <div className="filter-section p-3 mb-4 rounded shadow-sm">
+            <h5 className="mb-3" style={{ color: 'var(--ui-blue-primary)' }}><FaFilter className="me-2" />Apply Filters</h5>
             <Row className="g-3 align-items-end">
               <Col md={4} sm={6}>
                 <Form.Group controlId="filterByState">
@@ -472,7 +471,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
         </>
       )}
 
-      {/* Photo Display Modal - Remains unchanged */}
+      {/* Photo Display Modal */}
       <Modal show={showPhotoModal} onHide={handleClosePhotoModal} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>All Photos for Email Id: {selectedVisitErpId}</Modal.Title>
@@ -528,6 +527,10 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
       </Modal>
 
       <style>{`
+        :root {
+            --ui-blue-primary: #2962FF;
+            --ui-blue-dark: #0D47A1;
+        }
         .admin-visits-table-container {
           background-color: #ffffff;
           padding: 20px;
@@ -535,7 +538,7 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .table thead th {
-          background-color: #0d47a1;
+          background-color: var(--ui-blue-dark);
           color: white;
           white-space: nowrap;
         }
@@ -566,19 +569,18 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
             margin-top: 5px;
         }
         .expanded-row-details strong {
-            color: #0d47a1;
+            color: var(--ui-blue-dark);
         }
         .table > :not(caption)>*>* {
             padding: 0.5rem 0.75rem;
         }
-        /* Style for active tab */
         .nav-tabs .nav-link.active {
-            background-color: #0d47a1;
+            background-color: var(--ui-blue-dark);
             color: white;
-            border-color: #0d47a1;
+            border-color: var(--ui-blue-dark);
         }
         .nav-tabs .nav-link {
-            color: #0d47a1;
+            color: var(--ui-blue-dark);
             border: 1px solid transparent;
             border-top-left-radius: 0.25rem;
             border-top-right-radius: 0.25rem;
@@ -587,10 +589,9 @@ const AdminVisitsTable = ({ visits, loading, error }) => {
             border-color: #e9ecef #e9ecef #dee2e6;
         }
         .filter-section {
-          /* Add some styling for the filter box */
           padding: 1.5rem;
           border-radius: 0.75rem;
-          background-color: #f8f9fa; /* Light grey background */
+          background-color: #f8f9fa;
           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
           border: 1px solid #e0e0e0;
         }

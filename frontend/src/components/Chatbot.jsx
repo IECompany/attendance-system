@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    FaComments, FaRobot, FaUser, FaPaperPlane, FaTimes, FaMinus,
+    FaComments, FaRobot, FaUser, FaPaperPlane, FaXmark, FaMinus, // <-- CORRECTED: FaTimes replaced with FaXmark
     FaUserClock, FaFileInvoiceDollar, FaUsers, FaHeadset 
-} from 'react-icons/fa6'; // Corrected the import path for react-icons
+} from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Chatbot = () => {
@@ -104,11 +104,10 @@ const Chatbot = () => {
         <>
             <style jsx="true">{`
                 #chatbot-widget {
-                    /* --- THIS IS THE FIX --- */
-                    position: fixed; /* This lifts the chatbot out of the page flow */
-                    bottom: 24px;    /* This adds the margin from the bottom you wanted */
-                    right: 24px;     /* This positions it on the right */
-                    z-index: 1000;   /* This ensures it floats on top of other content like the footer */
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    z-index: 1000;
                     font-family: 'Inter', sans-serif;
                 }
 
@@ -290,7 +289,7 @@ const Chatbot = () => {
                                     </select>
                                 </div>
                                 <button onClick={() => setIsMinimized(true)} className="action-btn" title="Minimize"><FaMinus /></button>
-                                <button onClick={() => setIsOpen(false)} className="action-btn" title="Close"><FaTimes /></button>
+                                <button onClick={() => setIsOpen(false)} className="action-btn" title="Close"><FaXmark /></button> {/* <-- CORRECTED: FaTimes replaced with FaXmark */}
                             </div>
                         </div>
 
@@ -340,4 +339,3 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
-

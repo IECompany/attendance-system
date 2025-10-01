@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
     FaComments, FaRobot, FaUser, FaPaperPlane, FaTimes, FaMinus,
     FaUserClock, FaFileInvoiceDollar, FaUsers, FaHeadset 
-} from 'react-icons/fa';
+} from 'react-icons/fa6'; // Corrected the import path for react-icons
 import { motion, AnimatePresence } from 'framer-motion';
-// No need to import a separate CSS file anymore
 
 const Chatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +14,6 @@ const Chatbot = () => {
     const [language, setLanguage] = useState('en');
     const messagesEndRef = useRef(null);
 
-    // (All your JavaScript logic from the previous step remains exactly the same here)
-    // ...
-
-    // Language-specific content
     const languageContent = {
         en: { placeholder: "Type your message...", welcome: "Hello! I'm your AIHRMS assistant. How can I help you today?" },
         hi: { placeholder: "अपना संदेश टाइप करें...", welcome: "नमस्ते! मैं आपका AIHRMS सहायक हूं। आज मैं आपकी कैसे मदद कर सकता हूं?" }
@@ -31,7 +26,6 @@ const Chatbot = () => {
         { action: 'support', icon: <FaHeadset />, en: 'Support', hi: 'सहायता' },
     ];
 
-    // Fetch responses from JSON file in the public folder
     useEffect(() => {
         fetch('/data/responses.json')
             .then(response => response.json())
@@ -39,7 +33,6 @@ const Chatbot = () => {
             .catch(error => console.error('Error loading responses:', error));
     }, []);
 
-    // Add initial welcome message
     useEffect(() => {
         setMessages([{
             type: 'bot',
@@ -48,7 +41,6 @@ const Chatbot = () => {
         }]);
     }, [language]);
 
-    // Scroll to the bottom of the chat on new message
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -90,11 +82,12 @@ const Chatbot = () => {
 
     const handleSendMessage = () => {
         if (inputValue.trim() === '') return;
-        addMessage('user', inputValue);
+        const userMsg = inputValue;
+        addMessage('user', userMsg);
         setInputValue('');
 
         setTimeout(() => {
-            const botResponseText = generateBotResponse(inputValue);
+            const botResponseText = generateBotResponse(userMsg);
             addMessage('bot', botResponseText);
         }, 1200);
     };
@@ -111,10 +104,11 @@ const Chatbot = () => {
         <>
             <style jsx="true">{`
                 #chatbot-widget {
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    z-index: 1000;
+                    /* --- THIS IS THE FIX --- */
+                    position: fixed; /* This lifts the chatbot out of the page flow */
+                    bottom: 24px;    /* This adds the margin from the bottom you wanted */
+                    right: 24px;     /* This positions it on the right */
+                    z-index: 1000;   /* This ensures it floats on top of other content like the footer */
                     font-family: 'Inter', sans-serif;
                 }
 
@@ -259,7 +253,6 @@ const Chatbot = () => {
                 }
             `}</style>
 
-            {/* JSX for the chatbot UI */}
             <motion.div 
                 id="chat-bubble" 
                 className="chat-bubble" 
@@ -281,7 +274,6 @@ const Chatbot = () => {
                         exit={{ opacity: 0, y: 20, scale: 0.9 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                     >
-                        {/* ... All the JSX from the previous answer goes here ... */}
                         <div className="chat-header">
                             <div className="chat-bot-info">
                                 <div className="bot-avatar"><FaRobot /></div>
@@ -348,3 +340,4 @@ const Chatbot = () => {
 };
 
 export default Chatbot;
+

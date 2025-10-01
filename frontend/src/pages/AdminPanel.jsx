@@ -64,29 +64,22 @@ const AdminPanel = () => {
         const headers = getAuthHeaders();
         if (!headers) return;
 
-        fetch(`${API_BASE_URL}/admin/unique-districts`, { headers })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(setDistrictList)
-            .catch((err) => console.error("❌ Failed to fetch districts:", err));
+        // Fetches for dropdown lists
+        const endpoints = [
+            { url: "/admin/unique-districts", setter: setDistrictList, name: "districts" },
+            { url: "/admin/unique-states", setter: setStateList, name: "states" },
+            { url: "/admin/unique-checkin-dates", setter: setDateList, name: "dates" },
+        ];
 
-        fetch(`${API_BASE_URL}/admin/unique-states`, { headers })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(setStateList)
-            .catch((err) => console.error("❌ Failed to fetch states:", err));
-
-        fetch(`${API_BASE_URL}/admin/unique-checkin-dates`, { headers })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                return res.json();
-            })
-            .then(setDateList)
-            .catch((err) => console.error("❌ Failed to fetch dates:", err));
+        endpoints.forEach(({ url, setter, name }) => {
+            fetch(`${API_BASE_URL}${url}`, { headers })
+                .then((res) => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(setter)
+                .catch((err) => console.error(`❌ Failed to fetch ${name}:`, err));
+        });
     }, [user, token, logout, getAuthHeaders]);
 
     useEffect(() => {
@@ -233,6 +226,7 @@ const AdminPanel = () => {
                     border: none;
                     overflow: hidden;
                     background-color: var(--ui-light-gray);
+                    height: 100%; /* Ensure cards fill height in a row */
                 }
 
                 .panel-card:hover {
@@ -249,6 +243,12 @@ const AdminPanel = () => {
                     border-bottom: none;
                 }
 
+                /* Mobile-friendly Button Styling */
+                .btn-custom-primary, .btn-custom-secondary, .btn-custom-outline {
+                    padding: 0.75rem 1rem; /* Increase touch target size */
+                    font-size: 1rem;
+                }
+                
                 .btn-custom-primary {
                     background-color: var(--ui-turquoise);
                     color: var(--ui-white);
@@ -291,6 +291,14 @@ const AdminPanel = () => {
                     border-radius: 8px;
                     border: 1px solid #dee2e6;
                     padding: 0.75rem 1rem;
+                    /* Ensure form elements are readable and easy to tap */
+                    min-height: 48px; 
+                }
+                
+                /* **Crucial for Table Responsiveness** */
+                .table-responsive-scroll {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
                 }
 
                 .footer {
@@ -299,6 +307,25 @@ const AdminPanel = () => {
                     padding: 1.5rem 0;
                     text-align: center;
                 }
+                
+                /* **Mobile Adaptations (Max Width 767px - Bootstrap 'sm' breakpoint)** */
+                @media (max-width: 767.98px) {
+                    .admin-header {
+                        padding: 2rem 0;
+                    }
+                    .admin-header h2 {
+                        font-size: 1.75rem;
+                    }
+                    .content-container {
+                        padding: 1rem 0;
+                    }
+                    .panel-card {
+                        margin-bottom: 1rem; /* Add spacing between stacked cards */
+                    }
+                    .card-header-custom {
+                        font-size: 1rem;
+                    }
+                }
             `}</style>
 
             <header className="admin-header">
@@ -306,158 +333,170 @@ const AdminPanel = () => {
             </header>
 
             <main className="container content-container">
-                <div className="row g-4">
+                {/* Use Row and Col for correct Bootstrap grid structure */}
+                <Row className="g-4"> 
+                    
+                    {/* Download Dataset Section - Col will stack on smaller screens (sm and below) */}
+                    {/* Use Col and apply d-flex to ensure equal card height */}
+                    <Col xs={12} md={6} className="d-flex"> 
+                        <motion.div className="w-100" whileHover={{ scale: 1.02 }} >
+                            <div className="card panel-card d-flex flex-column">
+                                <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
+                                    <span><FaDownload className="me-2" /> Download Dataset (CSV)</span>
+                                </div>
+                                <div className="card-body d-flex flex-column flex-grow-1">
+                                    <Form.Select
+                                        className="mb-3"
+                                        value={district}
+                                        onChange={(e) => setDistrict(e.target.value)}
+                                    >
+                                        <option value="">Select District</option>
+                                        {districtList.map((d) => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </Form.Select>
 
-                    {/* Download Dataset Section */}
-                    <motion.div className="col-md-6 d-flex" whileHover={{ scale: 1.02 }} >
-                        <div className="card panel-card w-100 d-flex flex-column">
-                            <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
-                                <span><FaDownload className="me-2" /> Download Dataset (CSV)</span>
+                                    <Form.Select
+                                        className="mb-3"
+                                        value={state}
+                                        onChange={(e) => setState(e.target.value)}
+                                    >
+                                        <option value="">Select State</option>
+                                        {stateList.map((s) => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </Form.Select>
+
+                                    <Form.Select
+                                        className="mb-4"
+                                        value={date}
+                                        onChange={(e) => setDate(e.target.value)}
+                                    >
+                                        <option value="">Select Date</option>
+                                        {dateList.map((d) => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </Form.Select>
+
+                                    {/* Download Buttons are full width on all screen sizes (w-100) */}
+                                    <Button className="btn-custom-primary w-100 mb-3" onClick={handleDownload} disabled={downloadLoading}>
+                                        {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
+                                        {downloadLoading ? 'Downloading...' : 'Download Filtered Dataset'}
+                                    </Button>
+
+                                    <input
+                                        type="text"
+                                        className="form-control mb-3"
+                                        placeholder="Enter ERP ID to download"
+                                        value={erpIdDownload}
+                                        onChange={(e) => setErpIdDownload(e.target.value)}
+                                    />
+                                    <Button className="btn-custom-secondary w-100 mb-4" onClick={handleDownloadByErpId} disabled={downloadLoading}>
+                                        {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
+                                        {downloadLoading ? 'Downloading...' : 'Download by ERP ID'}
+                                    </Button>
+
+                                    <Button className="btn-custom-outline w-100 py-3 fs-5 mt-auto" onClick={handleDownloadAll} disabled={downloadLoading}>
+                                        {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
+                                        {downloadLoading ? 'Downloading...' : 'Download Entire Dataset'}
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="card-body d-flex flex-column flex-grow-1">
-                                <Form.Select
-                                    className="mb-3"
-                                    value={district}
-                                    onChange={(e) => setDistrict(e.target.value)}
-                                >
-                                    <option value="">Select District</option>
-                                    {districtList.map((d) => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </Form.Select>
+                        </motion.div>
+                    </Col>
 
-                                <Form.Select
-                                    className="mb-3"
-                                    value={state}
-                                    onChange={(e) => setState(e.target.value)}
-                                >
-                                    <option value="">Select State</option>
-                                    {stateList.map((s) => (
-                                        <option key={s} value={s}>{s}</option>
-                                    ))}
-                                </Form.Select>
-
-                                <Form.Select
-                                    className="mb-4"
-                                    value={date}
-                                    onChange={(e) => setDate(e.target.value)}
-                                >
-                                    <option value="">Select Date</option>
-                                    {dateList.map((d) => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </Form.Select>
-
-                                <Button className="btn-custom-primary w-100 mb-3" onClick={handleDownload} disabled={downloadLoading}>
-                                    {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
-                                    {downloadLoading ? 'Downloading...' : 'Download Filtered Dataset'}
-                                </Button>
-
-                                <input
-                                    type="text"
-                                    className="form-control mb-3"
-                                    placeholder="Enter ERP ID to download"
-                                    value={erpIdDownload}
-                                    onChange={(e) => setErpIdDownload(e.target.value)}
-                                />
-                                <Button className="btn-custom-secondary w-100 mb-4" onClick={handleDownloadByErpId} disabled={downloadLoading}>
-                                    {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
-                                    {downloadLoading ? 'Downloading...' : 'Download by ERP ID'}
-                                </Button>
-
-                                <Button className="btn-custom-outline w-100 py-3 fs-5" onClick={handleDownloadAll} disabled={downloadLoading}>
-                                    {downloadLoading ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> : <FaDownload className="me-2" />}
-                                    {downloadLoading ? 'Downloading...' : 'Download Entire Dataset'}
-                                </Button>
+                    {/* Filter Visit Data for Table Section - Col will stack on smaller screens (sm and below) */}
+                    <Col xs={12} md={6} className="d-flex">
+                        <motion.div className="w-100" whileHover={{ scale: 1.02 }}>
+                            <div className="card panel-card d-flex flex-column">
+                                <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
+                                    <span><FaClipboardList className="me-2" /> Filter Table Data</span>
+                                </div>
+                                <div className="card-body d-flex flex-column flex-grow-1">
+                                    <input
+                                        type="text"
+                                        className="form-control mb-3"
+                                        placeholder="Filter by ERP ID"
+                                        value={tableErpIdFilter}
+                                        onChange={(e) => setTableErpIdFilter(e.target.value)}
+                                    />
+                                    <Form.Select
+                                        className="mb-3"
+                                        value={tableDistrictFilter}
+                                        onChange={(e) => setTableDistrictFilter(e.target.value)}
+                                    >
+                                        <option value="">Filter by District</option>
+                                        {districtList.map((d) => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Select
+                                        className="mb-3"
+                                        value={tableStateFilter}
+                                        onChange={(e) => setTableStateFilter(e.target.value)}
+                                    >
+                                        <option value="">Filter by State</option>
+                                        {stateList.map((s) => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Select
+                                        className="mb-3"
+                                        value={tableDateFilter}
+                                        onChange={(e) => setTableDateFilter(e.target.value)}
+                                    >
+                                        <option value="">Filter by Date</option>
+                                        {dateList.map((d) => (
+                                            <option key={d} value={d}>{d}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Select
+                                        className="mb-4"
+                                        value={tableStatusFilter}
+                                        onChange={(e) => setTableStatusFilter(e.target.value)}
+                                    >
+                                        <option value="">Filter by Status</option>
+                                        {statusList.map((s) => (
+                                            <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Button
+                                        variant="outline-secondary"
+                                        className="btn-custom-outline w-100 mt-auto"
+                                        onClick={() => {
+                                            setTableErpIdFilter("");
+                                            setTableDistrictFilter("");
+                                            setTableStateFilter("");
+                                            setTableDateFilter("");
+                                            setTableStatusFilter("");
+                                        }}
+                                    >
+                                        <FaRedo className="me-2" />
+                                        Clear Table Filters
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </Col>
 
-                    {/* Filter Visit Data for Table Section */}
-                    <motion.div className="col-md-6 d-flex" whileHover={{ scale: 1.02 }}>
-                        <div className="card panel-card w-100 d-flex flex-column">
-                            <div className="card-header card-header-custom d-flex justify-content-between align-items-center">
-                                <span><FaClipboardList className="me-2" /> Filter Table Data</span>
+                    {/* All Visit Data Section - Full width on all screens (Col xs=12) */}
+                    <Col xs={12}>
+                        <motion.div className="w-100" whileHover={{ scale: 1.01 }}>
+                            <div className="card panel-card" >
+                                <div className="card-header card-header-custom">
+                                    <FaClipboardList className="me-2" /> All Visit Data
+                                </div>
+                                <div className="card-body p-0"> {/* Remove default padding for full table width */}
+                                    {/* Apply a wrapper class to enable horizontal scrolling for the table on small screens */}
+                                    <div className="table-responsive-scroll"> 
+                                        <AdminVisitsTable visits={visits} loading={loading} error={error} />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="card-body d-flex flex-column flex-grow-1">
-                                <input
-                                    type="text"
-                                    className="form-control mb-3"
-                                    placeholder="Filter by ERP ID"
-                                    value={tableErpIdFilter}
-                                    onChange={(e) => setTableErpIdFilter(e.target.value)}
-                                />
-                                <Form.Select
-                                    className="mb-3"
-                                    value={tableDistrictFilter}
-                                    onChange={(e) => setTableDistrictFilter(e.target.value)}
-                                >
-                                    <option value="">Filter by District</option>
-                                    {districtList.map((d) => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </Form.Select>
-                                <Form.Select
-                                    className="mb-3"
-                                    value={tableStateFilter}
-                                    onChange={(e) => setTableStateFilter(e.target.value)}
-                                >
-                                    <option value="">Filter by State</option>
-                                    {stateList.map((s) => (
-                                        <option key={s} value={s}>{s}</option>
-                                    ))}
-                                </Form.Select>
-                                <Form.Select
-                                    className="mb-3"
-                                    value={tableDateFilter}
-                                    onChange={(e) => setTableDateFilter(e.target.value)}
-                                >
-                                    <option value="">Filter by Date</option>
-                                    {dateList.map((d) => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </Form.Select>
-                                <Form.Select
-                                    className="mb-4"
-                                    value={tableStatusFilter}
-                                    onChange={(e) => setTableStatusFilter(e.target.value)}
-                                >
-                                    <option value="">Filter by Status</option>
-                                    {statusList.map((s) => (
-                                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                                    ))}
-                                </Form.Select>
-                                <Button
-                                    variant="outline-secondary"
-                                    className="btn-custom-outline w-100"
-                                    onClick={() => {
-                                        setTableErpIdFilter("");
-                                        setTableDistrictFilter("");
-                                        setTableStateFilter("");
-                                        setTableDateFilter("");
-                                        setTableStatusFilter("");
-                                    }}
-                                >
-                                    <FaRedo className="me-2" />
-                                    Clear Table Filters
-                                </Button>
-                            </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </Col>
 
-                    {/* All Visit Data Section */}
-                    <motion.div className="col-12" whileHover={{ scale: 1.01 }}>
-                        <div className="card panel-card" >
-                            <div className="card-header card-header-custom">
-                                <FaClipboardList className="me-2" /> All Visit Data
-                            </div>
-                            <div className="card-body">
-                                <AdminVisitsTable visits={visits} loading={loading} error={error} />
-                            </div>
-                        </div>
-                    </motion.div>
-
-                </div>
+                </Row>
             </main>
 
             <footer className="footer">

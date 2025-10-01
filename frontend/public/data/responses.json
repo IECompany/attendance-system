@@ -1,0 +1,542 @@
+{
+  "en": {
+    "greetings": {
+      "hello": [
+        "Hello! Welcome to AIHRMS - Your complete HR management solution.",
+        "Hi there! I'm your AIHRMS assistant. How can I help you today?",
+        "Welcome to AIHRMS! I'm here to assist with all your HR needs.",
+        "Hello! Ready to streamline your HR processes with AIHRMS?",
+        "Hi! Great to see you. How can I optimize your HR operations today?"
+      ],
+      "hi": [
+        "Hi! What would you like to know about AIHRMS today?",
+        "Hey there! Let's make HR management easier for you.",
+        "Hi! I'm excited to help you with AIHRMS features.",
+        "Hello! Ready to explore our HR management platform?",
+        "Hi! How can I assist with your HR challenges?"
+      ],
+      "good morning": [
+        "Good morning! Perfect time to organize your HR tasks.",
+        "Morning! Let's start the day with efficient HR management.",
+        "Good morning! How can I help streamline your HR today?",
+        "Rise and shine! Ready to manage your workforce with AIHRMS?",
+        "Good morning! What HR issues can we solve together?"
+      ],
+      "good afternoon": [
+        "Good afternoon! Hope your day is productive. How can I assist?",
+        "Afternoon! Time to optimize your HR processes.",
+        "Good afternoon! How can I help with HR management?",
+        "Hello! How's your day going? Need HR assistance?",
+        "Good afternoon! Ready to tackle HR challenges?"
+      ],
+      "good evening": [
+        "Good evening! Winding down? Let me help with any HR queries.",
+        "Evening! How can I assist with AIHRMS before you log off?",
+        "Good evening! Any last HR questions for today?",
+        "Hello! How can I help with evening HR tasks?",
+        "Good evening! Need assistance with AIHRMS features?"
+      ],
+      "hey": [
+        "Hey! What's on your HR mind today?",
+        "Hey there! Ready to explore AIHRMS?",
+        "Hey! How can I make HR easier for you?",
+        "Hey! What HR feature would you like to know about?",
+        "Hey! Great to connect. How can I help?"
+      ],
+      "namaste": [
+        "Namaste! Welcome to AIHRMS - Your HR management partner.",
+        "Namaste! How can I assist with your HR requirements?",
+        "Namaste! Ready to transform your HR processes?",
+        "Namaste! I'm here to help with all AIHRMS features.",
+        "Namaste! How can I optimize your HR operations?"
+      ]
+    },
+    
+    "help": {
+      "help": [
+        "I can help you with attendance, salary, employees, multi-tenant setup, and all AIHRMS features.",
+        "I'm here to assist with attendance tracking, payroll management, employee data, and company setup.",
+        "You can ask me about attendance system, salary slips, employee management, or multi-tenant features.",
+        "I specialize in AIHRMS features: attendance, payroll, employee management, and company administration.",
+        "Need help with HR management? I can explain any AIHRMS feature or process."
+      ],
+      "what can you do": [
+        "I can explain AIHRMS features, help with setup, troubleshoot issues, and guide through processes.",
+        "I assist with attendance systems, salary calculations, employee management, and multi-tenant setup.",
+        "I provide information about all AIHRMS modules and help with implementation guidance.",
+        "I can demo features, explain processes, help with configurations, and provide best practices.",
+        "I'm your AIHRMS expert for features, setup, troubleshooting, and optimization tips."
+      ],
+      "features": [
+        "AIHRMS offers: Attendance with photo/geotag, automated payroll, multi-tenant architecture, employee management.",
+        "Key features: Smart attendance, automatic salary slips, multi-company support, admin panels, employee self-service.",
+        "Our features include: GPS attendance, salary automation, company management, employee database, reporting.",
+        "AIHRMS provides: Biometric attendance, payroll processing, multi-tenant security, employee portals, analytics.",
+        "Features: Attendance tracking, salary management, company setup, employee profiles, attendance reports."
+      ]
+    },
+
+    "attendance": {
+      "attendance": [
+        "Employees mark attendance with photo and location verification through mobile or web.",
+        "Attendance system captures photo, GPS location, and timestamp for accurate tracking.",
+        "Users submit attendance with selfie and automatic location detection.",
+        "Attendance requires live photo and geotagging to prevent fraud.",
+        "Mark attendance via mobile app with photo verification and real-time location."
+      ],
+      "mark attendance": [
+        "To mark attendance: Open app, click attendance, take photo, location auto-captures, submit.",
+        "Mark attendance: Login > Attendance > Capture Photo > Location Verified > Submit.",
+        "Process: Access attendance module, allow camera/location, click photo, system verifies, attendance marked.",
+        "Steps: Open attendance, permit camera access, click selfie, location captured, attendance recorded.",
+        "Mark attendance through user panel with mandatory photo and location sharing."
+      ],
+      "attendance tracking": [
+        "Real-time attendance tracking with photo evidence and location history.",
+        "Track employee attendance with timestamps, photos, and GPS coordinates.",
+        "Live attendance monitoring with visual verification and location mapping.",
+        "Attendance tracking includes photo proof, location data, and time records.",
+        "Monitor attendance with photo verification and geographical tracking."
+      ],
+      "attendance report": [
+        "Generate detailed attendance reports with photos, locations, and timestamps.",
+        "Attendance reports show check-in/out times, locations, and verification photos.",
+        "Export attendance data with employee photos and location history.",
+        "Reports include attendance summary, late marks, and location analytics.",
+        "View attendance reports with visual proof and geographical insights."
+      ],
+      "attendance approval": [
+        "Admins can approve/reject attendance with photo and location verification.",
+        "Attendance approval process includes photo validation and location checking.",
+        "Managers review attendance submissions and approve based on photo/location.",
+        "Attendance requires admin approval after photo and location verification.",
+        "Approve attendance entries after verifying photos and geographical data."
+      ],
+      "attendance settings": [
+        "Configure attendance settings: geofencing, photo requirements, approval workflow.",
+        "Set attendance parameters: location radius, photo quality, approval hierarchy.",
+        "Customize attendance: enable/disable photo, set location accuracy, define approvers.",
+        "Attendance configuration: geofence boundaries, photo mandates, approval rules.",
+        "Setup attendance: location permissions, photo requirements, approval process."
+      ],
+      "attendance regularize": [
+        "Employees can regularize attendance with reason and supervisor approval.",
+        "Regularization process: submit request with reason, awaiting approval.",
+        "Request attendance regularization through employee self-service portal.",
+        "Regularize missed attendance with proper justification and approval.",
+        "Attendance regularization requires valid reason and manager approval."
+      ],
+      "attendance overtime": [
+        "Track overtime attendance with additional photo verification.",
+        "Overtime attendance requires extra approval and documentation.",
+        "Record overtime with special attendance marking and approval workflow.",
+        "Overtime tracking with enhanced verification and manager approval.",
+        "Mark overtime attendance with additional validation steps."
+      ],
+      "attendance leave": [
+        "Integrated leave management with attendance system.",
+        "Leave applications automatically reflect in attendance records.",
+        "Attendance shows leave status with approved leave applications.",
+        "Leave and attendance synchronized in real-time.",
+        "Attendance dashboard displays leave information alongside present days."
+      ],
+      "attendance mobile": [
+        "Mobile attendance with offline capability and sync when online.",
+        "Mark attendance via mobile app even without internet connection.",
+        "Mobile attendance works offline and syncs data when connected.",
+        "Use mobile app for attendance with or without internet access.",
+        "Offline attendance marking available in mobile application."
+      ]
+    },
+
+    "salary": {
+      "salary": [
+        "Automatic salary calculation based on attendance and company policies.",
+        "Salary processing with automated calculations and slip generation.",
+        "Salary system computes pay based on attendance, leaves, and deductions.",
+        "Automated salary processing with configurable components.",
+        "Salary calculation using attendance data and company rules."
+      ],
+      "salary slip": [
+        "Auto-generated salary slips with detailed breakdown and digital signature.",
+        "Salary slips include basic pay, allowances, deductions, and net amount.",
+        "Digital salary slips with company logo and authorized signatures.",
+        "Salary slips generated automatically at month-end with all components.",
+        "View and download salary slips from employee self-service portal."
+      ],
+      "payroll": [
+        "Complete payroll processing with tax calculations and compliance.",
+        "Payroll management includes salary calculation, PF, ESI, and TDS.",
+        "Automated payroll processing with statutory compliance.",
+        "Payroll system handles salary, bonuses, deductions, and taxes.",
+        "End-to-end payroll management from calculation to disbursement."
+      ],
+      "salary components": [
+        "Salary includes basic, HRA, allowances, bonuses, and deductions.",
+        "Configurable salary structure with multiple components.",
+        "Salary components: basic pay, house rent, conveyance, medical, special allowances.",
+        "Define salary structure with basic, DA, HRA, and other allowances.",
+        "Customizable salary components as per company policy."
+      ],
+      "salary calculation": [
+        "Salary calculated based on working days, leaves, and attendance.",
+        "Automatic salary computation using attendance and leave records.",
+        "Salary calculation considers present days, leaves, and holidays.",
+        "Compute salary using attendance data and company working days.",
+        "Salary derived from actual attendance and company calendar."
+      ],
+      "salary approval": [
+        "Salary requires HR and finance approval before processing.",
+        "Multi-level salary approval workflow for accuracy.",
+        "Salary processing needs approval from HR and accounts department.",
+        "Approval workflow for salary before final processing.",
+        "Salary requires managerial approval before disbursement."
+      ],
+      "salary report": [
+        "Generate salary reports with employee-wise breakdown.",
+        "Salary reports show component-wise details and summaries.",
+        "Export salary data for accounting and compliance purposes.",
+        "Salary analytics with trends and comparative reports.",
+        "Detailed salary reports with filters and export options."
+      ],
+      "salary advance": [
+        "Salary advance requests with approval workflow.",
+        "Employees can request salary advance through system.",
+        "Salary advance feature with manager approval process.",
+        "Request advance salary with justification and approval.",
+        "Salary advance system with repayment tracking."
+      ],
+      "reimbursement": [
+        "Travel and expense reimbursement through salary system.",
+        "Claim reimbursements with supporting documents.",
+        "Reimbursement processing integrated with salary.",
+        "Submit expense claims for reimbursement.",
+        "Reimbursement approval and payment through payroll."
+      ],
+      "bonus": [
+        "Bonus calculation and disbursement through salary system.",
+        "Festival and performance bonus processing.",
+        "Bonus computation based on company policy.",
+        "Bonus payment integrated with salary processing.",
+        "Calculate and disburse bonuses through payroll."
+      ]
+    },
+
+    "employee": {
+      "employee": [
+        "Complete employee database with personal and professional information.",
+        "Employee management with profiles, documents, and employment history.",
+        "Centralized employee database with all relevant details.",
+        "Employee information system with comprehensive data management.",
+        "Manage employee records, documents, and employment details."
+      ],
+      "employee profile": [
+        "Employee profiles with personal info, job details, and documents.",
+        "Complete employee profiles with photo, contact, and employment data.",
+        "Digital employee profiles with all necessary information.",
+        "Employee profile management with customizable fields.",
+        "Maintain employee profiles with personal and professional data."
+      ],
+      "employee onboarding": [
+        "Digital employee onboarding with document collection.",
+        "Streamlined onboarding process with checklist and approvals.",
+        "Employee onboarding with document verification and account creation.",
+        "Onboarding workflow for new employee setup.",
+        "New employee onboarding with system access provisioning."
+      ],
+      "employee documents": [
+        "Digital document management for employee records.",
+        "Store and manage employee documents securely.",
+        "Employee document repository with access controls.",
+        "Digital locker for employee certificates and documents.",
+        "Document management system for employee records."
+      ],
+      "employee self service": [
+        "Employee self-service portal for information and requests.",
+        "ESS portal for attendance, salary, leaves, and profile management.",
+        "Self-service features for employees to access their data.",
+        "Employee portal for personal information and requests.",
+        "ESS platform for employee data access and updates."
+      ],
+      "employee exit": [
+        "Employee exit process with clearance workflow.",
+        "Exit management with document collection and approvals.",
+        "Employee separation process with system deactivation.",
+        "Exit workflow for full and final settlement.",
+        "Employee offboarding with proper documentation."
+      ],
+      "employee hierarchy": [
+        "Organization hierarchy with reporting structure.",
+        "Employee reporting relationships and organization chart.",
+        "Define organizational structure and reporting lines.",
+        "Company hierarchy with department and reporting setup.",
+        "Organization chart with employee positions and relationships."
+      ],
+      "employee shift": [
+        "Shift management for employees with timings.",
+        "Define employee shifts and rotation patterns.",
+        "Shift configuration for different employee groups.",
+        "Manage employee work shifts and timings.",
+        "Shift planning and allocation for employees."
+      ],
+      "employee transfer": [
+        "Employee transfer process with approval workflow.",
+        "Inter-department and location transfer management.",
+        "Employee transfer with proper documentation and approvals.",
+        "Transfer employees between departments or locations.",
+        "Employee relocation process with system updates."
+      ],
+      "employee promotion": [
+        "Promotion management with salary revision.",
+        "Employee promotion process with documentation.",
+        "Promotion workflow with approvals and updates.",
+        "Manage employee promotions and career progression.",
+        "Promotion system with position and salary changes."
+      ]
+    },
+
+    "multi_tenant": {
+      "multi tenant": [
+        "AIHRMS supports multiple companies with isolated data and configurations.",
+        "Multi-tenant architecture allows separate companies with secure data isolation.",
+        "Multiple companies can use AIHRMS with completely separate databases.",
+        "True multi-tenancy with data security and custom configurations.",
+        "Support for multiple organizations with independent data management."
+      ],
+      "company registration": [
+        "Companies can register and setup their independent AIHRMS instance.",
+        "New company registration with admin account creation.",
+        "Company onboarding process with system configuration.",
+        "Register new companies with their specific requirements.",
+        "Company setup with customized features and settings."
+      ],
+      "company admin": [
+        "Each company has its own admin with full control.",
+        "Company-level administrators with management privileges.",
+        "Dedicated admin panel for each registered company.",
+        "Company admins can manage their organization independently.",
+        "Each company gets separate admin access and controls."
+      ],
+      "data isolation": [
+        "Complete data isolation between different companies.",
+        "Each company's data is completely separate and secure.",
+        "Data security with company-wise isolation and access controls.",
+        "No data sharing between different company instances.",
+        "Complete privacy and data separation for each organization."
+      ],
+      "custom configuration": [
+        "Each company can customize features and settings.",
+        "Company-specific configurations and customizations.",
+        "Customizable features based on company requirements.",
+        "Flexible configuration options for each organization.",
+        "Tailored settings and features for individual companies."
+      ],
+      "super admin": [
+        "Super admin oversees all companies and system operations.",
+        "Super administrator with cross-company access and controls.",
+        "System-level admin for managing all company instances.",
+        "Super admin manages platform and company registrations.",
+        "Overall system administration with company management."
+      ],
+      "billing": [
+        "Company-wise billing and subscription management.",
+        "Separate billing for each company based on usage.",
+        "Individual billing cycles for different organizations.",
+        "Company-specific billing and payment processing.",
+        "Separate invoicing and payment for each company."
+      ],
+      "company migration": [
+        "Easy company data migration and setup assistance.",
+        "Support for company data migration from other systems.",
+        "Assisted migration for companies switching to AIHRMS.",
+        "Data migration services for new company onboarding.",
+        "Help companies transition from existing HR systems."
+      ]
+    },
+
+    "technical": {
+      "api": [
+        "REST APIs available for integration with other systems.",
+        "Comprehensive API documentation for developers.",
+        "Integration APIs for attendance, employee, and salary data.",
+        "API access for custom integrations and automation.",
+        "RESTful APIs with authentication and documentation."
+      ],
+      "integration": [
+        "Integration with biometric devices and other HR systems.",
+        "Connect with existing systems through APIs and webhooks.",
+        "Integration capabilities with payroll software and ERPs.",
+        "Seamless integration with company existing infrastructure.",
+        "API-based integration for data synchronization."
+      ],
+      "mobile app": [
+        "Dedicated mobile apps for Android and iOS platforms.",
+        "Mobile applications for employees and managers.",
+        "Native mobile apps with offline capabilities.",
+        "Mobile apps for attendance and self-service features.",
+        "Cross-platform mobile applications available."
+      ],
+      "security": [
+        "Enterprise-grade security with data encryption.",
+        "SSL encryption and secure data storage.",
+        "Role-based access control and data security.",
+        "Secure platform with regular security updates.",
+        "Data protection with encryption and access controls."
+      ],
+      "backup": [
+        "Automatic data backup and recovery systems.",
+        "Regular backups with disaster recovery options.",
+        "Automated backup procedures for data safety.",
+        "Data backup and restoration capabilities.",
+        "Scheduled backups with recovery options."
+      ],
+      "support": [
+        "24/7 technical support for all users.",
+        "Dedicated support team for assistance.",
+        "Multi-channel support: email, phone, chat.",
+        "Comprehensive technical support services.",
+        "Help desk support for all technical issues."
+      ]
+    },
+
+    "pricing": {
+      "price": [
+        "Flexible pricing based on company size and features.",
+        "Cost-effective plans for organizations of all sizes.",
+        "Transparent pricing with no hidden charges.",
+        "Affordable plans starting from basic to enterprise.",
+        "Competitive pricing with value for money."
+      ],
+      "free trial": [
+        "15-day free trial with all features included.",
+        "Free trial available for new companies.",
+        "Try AIHRMS free for 15 days with full access.",
+        "No-cost trial period to evaluate features.",
+        "Free demo and trial for interested companies."
+      ],
+      "subscription": [
+        "Monthly and annual subscription plans available.",
+        "Flexible subscription options for companies.",
+        "Choose between monthly or yearly billing cycles.",
+        "Subscription plans with different feature sets.",
+        "Various subscription tiers based on requirements."
+      ],
+      "demo": [
+        "Schedule a personalized demo with our experts.",
+        "Live demo available to see AIHRMS in action.",
+        "Book a demo session for detailed understanding.",
+        "Personalized demo based on your requirements.",
+        "Live product demonstration on request."
+      ]
+    }
+  },
+
+  "hi": {
+    "greetings": {
+      "hello": [
+        "नमस्ते! AIHRMS में आपका स्वागत है - आपका संपूर्ण HR प्रबंधन समाधान।",
+        "नमस्ते! मैं आपका AIHRMS सहायक हूं। आज मैं आपकी कैसे मदद कर सकता हूं?",
+        "AIHRMS में आपका स्वागत है! मैं आपकी सभी HR जरूरतों में सहायता के लिए यहां हूं।",
+        "नमस्ते! क्या आप AIHRMS के साथ अपनी HR प्रक्रियाओं को सुव्यवस्थित करने के लिए तैयार हैं?",
+        "नमस्ते! आपसे मिलकर अच्छा लगा। आज मैं आपके HR ऑपरेशन्स को कैसे ऑप्टिमाइज़ कर सकता हूं?"
+      ],
+      "hi": [
+        "नमस्ते! आज आप AIHRMS के बारे में क्या जानना चाहेंगे?",
+        "नमस्ते! आइए HR प्रबंधन को आपके लिए आसान बनाएं।",
+        "नमस्ते! मैं AIHRMS सुविधाओं के साथ आपकी मदद करने के लिए उत्साहित हूं।",
+        "नमस्ते! क्या आप हमारे HR प्रबंधन प्लेटफॉर्म को एक्सप्लोर करने के लिए तैयार हैं?",
+        "नमस्ते! मैं आपकी HR चुनौतियों में कैसे सहायता कर सकता हूं?"
+      ],
+      "good morning": [
+        "सुप्रभात! अपने HR कार्यों को व्यवस्थित करने का सही समय है।",
+        "सुप्रभात! आइए दिन की शुरुआत कुशल HR प्रबंधन के साथ करें।",
+        "सुप्रभात! आज मैं आपके HR को कैसे सुव्यवस्थित करने में मदद कर सकता हूं?",
+        "सुप्रभात! क्या आप AIHRMS के साथ अपने वर्कफोर्स को प्रबंधित करने के लिए तैयार हैं?",
+        "सुप्रभात! आज हम मिलकर कौन सी HR समस्याएं हल कर सकते हैं?"
+      ],
+      "good afternoon": [
+        "नमस्ते! उम्मीद है आपका दिन उत्पादक रहा है। मैं कैसे सहायता कर सकता हूं?",
+        "नमस्ते! अपनी HR प्रक्रियाओं को ऑप्टिमाइज़ करने का समय है।",
+        "नमस्ते! HR प्रबंधन में मैं कैसे मदद कर सकता हूं?",
+        "नमस्ते! आपका दिन कैसा चल रहा है? क्या HR सहायता चाहिए?",
+        "नमस्ते! क्या आप HR चुनौतियों से निपटने के लिए तैयार हैं?"
+      ],
+      "good evening": [
+        "शुभ संध्या! दिन का अंत? कोई HR प्रश्न हो तो मैं मदद कर सकता हूं।",
+        "शाम का नमस्ते! लॉग ऑफ करने से पहले AIHRMS में मैं कैसे सहायता कर सकता हूं?",
+        "शुभ संध्या! आज के लिए कोई अंतिम HR प्रश्न?",
+        "नमस्ते! शाम के HR कार्यों में मैं कैसे मदद कर सकता हूं?",
+        "शुभ संध्या! क्या AIHRMS सुविधाओं के साथ सहायता चाहिए?"
+      ],
+      "hey": [
+        "नमस्ते! आज आपके HR मन में क्या चल रहा है?",
+        "नमस्ते! क्या AIHRMS एक्सप्लोर करने के लिए तैयार हैं?",
+        "नमस्ते! मैं HR को आपके लिए कैसे आसान बना सकता हूं?",
+        "नमस्ते! आप कौन सी HR सुविधा के बारे में जानना चाहेंगे?",
+        "नमस्ते! जुड़कर अच्छा लगा। मैं कैसे मदद कर सकता हूं?"
+      ],
+      "namaste": [
+        "नमस्ते! AIHRMS में आपका स्वागत है - आपका HR प्रबंधन साथी।",
+        "नमस्ते! मैं आपकी HR आवश्यकताओं में कैसे सहायता कर सकता हूं?",
+        "नमस्ते! क्या आप अपनी HR प्रक्रियाओं को बदलने के लिए तैयार हैं?",
+        "नमस्ते! मैं सभी AIHRMS सुविधाओं के साथ मदद के लिए यहां हूं।",
+        "नमस्ते! मैं आपके HR ऑपरेशन्स को कैसे ऑप्टिमाइज़ कर सकता हूं?"
+      ]
+    },
+
+    "help": {
+      "help": [
+        "मैं आपकी अटेंडेंस, सैलरी, कर्मचारी, मल्टी-टेनेंट सेटअप और सभी AIHRMS सुविधाओं में मदद कर सकता हूं।",
+        "मैं अटेंडेंस ट्रैकिंग, पेरोल प्रबंधन, कर्मचारी डेटा और कंपनी सेटअप में सहायता के लिए यहां हूं।",
+        "आप मुझसे अटेंडेंस सिस्टम, सैलरी स्लिप, कर्मचारी प्रबंधन, या मल्टी-टेनेंट सुविधाओं के बारे में पूछ सकते हैं।",
+        "मैं AIHRMS सुविधाओं में विशेषज्ञ हूं: अटेंडेंस, पेरोल, कर्मचारी प्रबंधन, और कंपनी प्रशासन।",
+        "HR प्रबंधन में मदद चाहिए? मैं किसी भी AIHRMS सुविधा या प्रक्रिया की व्याख्या कर सकता हूं।"
+      ],
+      "what can you do": [
+        "मैं AIHRMS सुविधाओं की व्याख्या कर सकता हूं, सेटअप में मदद कर सकता हूं, समस्याओं का निवारण कर सकता हूं और प्रक्रियाओं के माध्यम से मार्गदर्शन कर सकता हूं।",
+        "मैं अटेंडेंस सिस्टम, सैलरी गणना, कर्मचारी प्रबंधन और मल्टी-टेनेंट सेटअप में सहायता करता हूं।",
+        "मैं सभी AIHRMS मॉड्यूल के बारे में जानकारी प्रदान करता हूं और कार्यान्वयन मार्गदर्शन में मदद करता हूं।",
+        "मैं सुविधाओं का डेमो दे सकता हूं, प्रक्रियाओं की व्याख्या कर सकता हूं, कॉन्फ़िगरेशन में मदद कर सकता हूं और सर्वोत्तम प्रथाएं प्रदान कर सकता हूं।",
+        "मैं सुविधाओं, सेटअप, समस्या निवारण और ऑप्टिमाइज़ेशन टिप्स के लिए आपका AIHRMS विशेषज्ञ हूं।"
+      ],
+      "features": [
+        "AIHRMS प्रदान करता है: फोटो/जियोटैग के साथ अटेंडेंस, ऑटोमेटेड पेरोल, मल्टी-टेनेंट आर्किटेक्चर, कर्मचारी प्रबंधन।",
+        "मुख्य सुविधाएं: स्मार्ट अटेंडेंस, ऑटोमेटिक सैलरी स्लिप, मल्टी-कंपनी सपोर्ट, एडमिन पैनल, कर्मचारी सेल्फ-सर्विस।",
+        "हमारी सुविधाओं में शामिल हैं: जीपीएस अटेंडेंस, सैलरी ऑटोमेशन, कंपनी प्रबंधन, कर्मचारी डेटाबेस, रिपोर्टिंग।",
+        "AIHRMS प्रदान करता है: बायोमेट्रिक अटेंडेंस, पेरोल प्रोसेसिंग, मल्टी-टेनेंट सुरक्षा, कर्मचारी पोर्टल, एनालिटिक्स।",
+        "सुविधाएं: अटेंडेंस ट्रैकिंग, सैलरी प्रबंधन, कंपनी सेटअप, कर्मचारी प्रोफाइल, अटेंडेंस रिपोर्ट।"
+      ]
+    },
+
+    "attendance": {
+      "attendance": [
+        "कर्मचारी मोबाइल या वेब के माध्यम से फोटो और लोकेशन वेरिफिकेशन के साथ अटेंडेंस मार्क करते हैं।",
+        "अटेंडेंस सिस्टम सटीक ट्रैकिंग के लिए फोटो, जीपीएस लोकेशन और टाइमस्टैम्प कैप्चर करता है।",
+        "उपयोगकर्ता सेल्फी और ऑटोमेटिक लोकेशन डिटेक्शन के साथ अटेंडेंस सबमिट करते हैं।",
+        "अटेंडेंस के लिए फ्रॉड रोकने के लिए लाइव फोटो और जियोटैगिंग आवश्यक है।",
+        "फोटो वेरिफिकेशन और रियल-टाइम लोकेशन के साथ मोबाइल ऐप के माध्यम से अटेंडेंस मार्क करें।"
+      ],
+      "mark attendance": [
+        "अटेंडेंस मार्क करने के लिए: ऐप खोलें, अटेंडेंस क्लिक करें, फोटो लें, लोकेशन ऑटो-कैप्चर होगी, सबमिट करें।",
+        "अटेंडेंस मार्क करें: लॉगिन > अटेंडेंस > फोटो कैप्चर करें > लोकेशन वेरिफाइड > सबमिट।",
+        "प्रक्रिया: अटेंडेंस मॉड्यूल एक्सेस करें, कैमरा/लोकेशन की अनुमति दें, फोटो क्लिक करें, सिस्टम वेरिफाई करता है, अटेंडेंस मार्क हो जाता है।",
+        "चरण: अटेंडेंस खोलें, कैमरा एक्सेस की अनुमति दें, सेल्फी क्लिक करें, लोकेशन कैप्चर हो जाती है, अटेंडेंस रिकॉर्ड हो जाता है।",
+        "अनिवार्य फोटो और लोकेशन शेयरिंग के साथ यूजर पैनल के माध्यम से अटेंडेंस मार्क करें।"
+      ],
+      "attendance tracking": [
+        "फोटो सबूत और लोकेशन हिस्ट्री के साथ रियल-टाइम अटेंडेंस ट्रैकिंग।",
+        "टाइमस्टैम्प, फोटो और जीपीएस कोऑर्डिनेट्स के साथ कर्मचारी अटेंडेंस ट्रैक करें।",
+        "विजुअल वेरिफिकेशन और लोकेशन मैपिंग के साथ लाइव अटेंडेंस मॉनिटरिंग।",
+        "अटेंडेंस ट्रैकिंग में फोटो प्रूफ, लोकेशन डेटा और समय रिकॉर्ड शामिल हैं।",
+        "फोटो वेरिफिकेशन और भौगोलिक ट्रैकिंग के साथ अटेंडेंस की निगरानी करें।"
+      ],
+      "attendance report": [
+        "फोटो, लोकेशन और टाइमस्टैम्प के साथ विस्तृत अटेंडेंस रिपोर्ट जेनरेट करें।",
+        "अटेंडेंस रिपोर्ट चेक-इन/आउट समय, लोकेशन और वेरिफिकेशन फोटो दिखाती है।",
+        "कर्मचारी फोटो और लोकेशन हिस्ट्री के साथ अटेंडेंस डेटा एक्सपोर्ट करें।",
+        "रिपोर्ट में अटेंडेंस सारांश, लेट मार्क्स और लोकेशन एनालिटिक्स शामिल हैं।",
+        "विजुअल प्रूफ और भौगोलिक अंतर्दृष्टि के साथ अटेंडेंस रिपोर्ट देखें।"
+      ]
+    }
+  }
+}

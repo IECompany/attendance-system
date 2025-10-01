@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   FaDownload,
-  FaMapMarkedAlt,
   FaUserPlus,
   FaClipboardList,
   FaBuilding,
@@ -11,11 +10,18 @@ import {
   FaUpload,
   FaChartLine,
   FaMoneyBillAlt,
-  FaBars,
-  FaTimes,
+  FaBars, // NEW: Hamburger icon for mobile
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Alert, Nav, Spinner, Button, Offcanvas, Row, Col } from "react-bootstrap";
+import { 
+  Alert, 
+  Nav, 
+  Spinner, 
+  Button, 
+  Offcanvas, // NEW: Offcanvas for mobile sidebar
+  Row,       // NEW: Row for responsive layout
+  Col        // NEW: Col for responsive layout
+} from "react-bootstrap";
 import AdminVisitsTable from "../components/AdminVisitsTable";
 import BulkUserRegistration from "../components/BulkUserregistration";
 import UserManagement from '../components/UserManagement';
@@ -68,6 +74,7 @@ const SuperAdminPanel = () => {
   const [availableOffices, setAvailableOffices] = useState([]);
   const statusList = ["active", "completed"];
 
+  // --- NEW STATES FOR ADDING A NEW STATE ---
   const [showAddStateInput, setShowAddStateInput] = useState(false);
   const [tempNewStateName, setTempNewStateName] = useState("");
 
@@ -83,11 +90,8 @@ const SuperAdminPanel = () => {
     };
   }, [token, user, logout]);
 
-  // --- State and Data Fetching Logic (Omitted for brevity, assumed functional from previous turn) ---
-  // The useEffect blocks and the handle* functions for API calls (fetching states, visits, downloading CSV, etc.)
-  // are assumed to be present and functional here, using getAuthHeaders().
+  // --- Core Data Fetching Logic (Retained from previous working code) ---
 
-  // Re-adding the key helper functions
   const fetchStates = useCallback(async () => {
     const headers = getAuthHeaders();
     if (!headers) return;
@@ -103,6 +107,7 @@ const SuperAdminPanel = () => {
       console.error("❌ Error fetching states:", err);
     }
   }, [getAuthHeaders]);
+
 
   const handleAddState = async (e) => {
     e.preventDefault();
@@ -127,7 +132,7 @@ const SuperAdminPanel = () => {
       if (res.ok) {
         alert(`✅ State "${tempNewStateName}" added successfully.`);
         setTempNewStateName("");
-        setShowAddStateInput(false);
+        setShowAddStateInput(false); 
         fetchStates();
       } else {
         alert(`❌ Failed to add state: ${data.message}`);
@@ -138,28 +143,185 @@ const SuperAdminPanel = () => {
     }
   };
 
+
   useEffect(() => {
-    // This useEffect is complex, ensure all API fetches (states, dates, offices) are present.
-    // ... (All fetch logic from the previous code block should be here) ...
-    // Note: Dependencies like fetchStates need to be included.
+    if (!user || !token || !user.companyId) {
+      logout();
+      return;
+    }
+
+    const headers = getAuthHeaders();
+    if (!headers) return;
+    
+    const fetchUniqueDates = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/admin/unique-checkin-dates`, { headers });
+        const data = await res.json();
+        if (res.ok) {
+          setAvailableDates(data.sort().reverse());
+        } else {
+          console.error("❌ Failed to fetch unique dates:", data.message || "Unknown error");
+        }
+      } catch (err) {
+        console.error("❌ Error fetching unique dates:", err);
+      }
+    };
+    
+    const fetchOffices = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/offices`, { headers });
+        const data = await res.json();
+        if (res.ok) {
+          setAvailableOffices(data.sort((a, b) => a.name.localeCompare(b.name)));
+        } else {
+          console.error("❌ Failed to fetch offices:", data.message || "Unknown error");
+        }
+      } catch (err) {
+        console.error("❌ Error fetching offices:", err);
+      }
+    };
+
+    fetchStates();
+    fetchUniqueDates();
+    fetchOffices();
   }, [user, token, logout, officeListUpdated, getAuthHeaders, fetchStates]);
 
   useEffect(() => {
-    // This useEffect is for fetching visits for the table/dashboard
-    // ... (Fetch visits logic should be here) ...
+    if (activeSection === 'visitsHistory' || activeSection === 'dashboard') {
+      const fetchAllVisits = async () => {
+        const headers = getAuthHeaders();
+        if (!headers) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await fetch(`${API_BASE_URL}/admin/visits`, { headers });
+          const contentType = response.headers.get("content-type");
+          if (!response.ok || (contentType && !contentType.includes("application/json"))) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch all admin visits. Server responded with: ${errorText.substring(0, 150)}...`);
+          }
+          const data = await response.json();
+          setVisits(data);
+        } catch (err) {
+          setError(err.message || "Could not fetch admin visit data.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAllVisits();
+    }
   }, [activeSection, officeListUpdated, occupationListUpdated, user, token, getAuthHeaders]);
+
+  const downloadCsv = async (url, filename) => {
+    setDownloadLoading(true);
+    setError(null);
+    const headers = getAuthHeaders();
+    if (!headers) {
+      setDownloadLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData || `Failed to download CSV: ${response.status} ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      alert("✅ CSV downloaded successfully!");
+    } catch (err) {
+      alert(`❌ Failed to download CSV: ${err.message}`);
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
+  const handleDownloadEntireDataset = () => { downloadCsv(`${API_BASE_URL}/admin/download-submissions`, "all_submissions.csv"); };
+  const handleDownloadStatewiseDataset = () => { if (!downloadState) { alert("Please select a State."); return; } const query = new URLSearchParams({ state: downloadState }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_state_${downloadState}.csv`); };
+  const handleDownloadOfficewiseDataset = () => { if (!downloadOffice) { alert("Please select an Office."); return; } const query = new URLSearchParams({ officeId: downloadOffice }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_office_${downloadOffice}.csv`); };
+  const handleDownloadDatewiseDataset = () => { if (!downloadDate) { alert("Please select a Date."); return; } const query = new URLSearchParams({ date: downloadDate }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_date_${downloadDate}.csv`); };
+  const handleDownloadStatuswiseDataset = () => { if (!downloadStatus) { alert("Please select a Status (Active/Completed)."); return; } const query = new URLSearchParams({ status: downloadStatus }).toString(); downloadCsv(`${API_BASE_URL}/admin/download-submissions?${query}`, `submissions_status_${downloadStatus}.csv`); };
+
+  const handleAdminRegister = async (e) => {
+    e.preventDefault();
+    if (!adminEmail || !adminPassword) { alert("Please enter email and password."); return; }
+
+    const headers = getAuthHeaders();
+    if (!headers) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': headers.Authorization,
+          'X-Company-ID': headers['X-Company-ID']
+        },
+        body: JSON.stringify({ email: adminEmail, password: adminPassword, companyId: user.companyId }),
+      });
+      const data = await res.json();
+      if (res.ok) { alert("✅ Admin created successfully."); setAdminEmail(""); setAdminPassword(""); } else { alert(`❌ ${data.message}`); }
+    } catch (err) { alert("Server error."); }
+  };
+
+  const handleAddOffice = async (e) => {
+    e.preventDefault();
+    if (!newOfficeName.trim() || !newOfficeState) { alert("Please enter both Office Name and select a State."); return; }
+
+    const headers = getAuthHeaders();
+    if (!headers) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/offices`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': headers.Authorization,
+          'X-Company-ID': headers['X-Company-ID']
+        },
+        body: JSON.stringify({ name: newOfficeName, state: newOfficeState }),
+      });
+      const data = await res.json();
+      if (res.ok) { alert(`✅ Office "${newOfficeName}" added successfully for ${newOfficeState}.`); setNewOfficeName(""); setNewOfficeState(""); setOfficeListUpdated((prev) => !prev); } else { alert(`❌ Failed to add office: ${data.message}`); }
+    } catch (err) { alert("Server error while adding office."); }
+  };
+
+  const handleAddOccupation = async (e) => {
+    e.preventDefault();
+    if (!newOccupationName.trim()) { alert("Please enter an Occupation Name."); return; }
+
+    const headers = getAuthHeaders();
+    if (!headers) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/occupations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': headers.Authorization,
+          'X-Company-ID': headers['X-Company-ID']
+        },
+        body: JSON.stringify({ name: newOccupationName }),
+      });
+      const data = await res.json();
+      if (res.ok) { alert(`✅ Occupation "${newOccupationName}" added successfully.`); setNewOccupationName(""); setOccupationListUpdated((prev) => !prev); } else { alert(`❌ Failed to add occupation: ${data.message}`); }
+    } catch (err) { alert("Server error while adding occupation."); }
+  };
   
-  // Placeholder for handleDownload* functions (assumed to be present)
-  const handleDownloadEntireDataset = () => { /* ... downloadCsv logic ... */ };
-  const handleDownloadStatewiseDataset = () => { /* ... downloadCsv logic ... */ };
-  const handleDownloadOfficewiseDataset = () => { /* ... downloadCsv logic ... */ };
-  const handleDownloadDatewiseDataset = () => { /* ... downloadCsv logic ... */ };
-  const handleDownloadStatuswiseDataset = () => { /* ... downloadCsv logic ... */ };
-  const handleAdminRegister = async (e) => { /* ... API call logic ... */ };
-  const handleAddOffice = async (e) => { /* ... API call logic ... */ };
-  const handleAddOccupation = async (e) => { /* ... API call logic ... */ };
-
-
   // Helper function to handle section change and close sidebar on mobile
   const handleSectionChange = (section) => {
     setActiveSection(section);
@@ -167,7 +329,6 @@ const SuperAdminPanel = () => {
   };
 
   const renderContent = () => {
-    // ... (renderContent logic from previous turn) ...
     const defaultCardProps = {
         initial: { opacity: 0, y: 20 },
         animate: { opacity: 1, y: 0 },
@@ -188,11 +349,11 @@ const SuperAdminPanel = () => {
               <h3 className="mb-3" style={{ color: "var(--ui-blue-dark)" }}>Your Dashboard Awaits!</h3>
               <p>Navigate through the powerful administrative tools using the sidebar.</p>
               <hr />
-              <Row className="g-3">
+              <Row className="g-3"> 
                 <Col xs={12} md={6} lg={4}>
                   <div className="card text-center text-white p-3 border-0" style={{ backgroundColor: "var(--ui-blue-primary)" }}>
                     <h5>Overall Total Attendance</h5>
-                    <h4 className="fw-bold">{visits.length > 0 ? visits.length : <Spinner as="span" animation="border" size="sm" />}</h4>
+                    <h4 className="fw-bold">{visits.length > 0 ? visits.length : (loading ? <Spinner as="span" animation="border" size="sm" /> : '0')}</h4>
                     <p className="small mb-0">Fetched from Attendance History</p>
                   </div>
                 </Col>
@@ -218,7 +379,7 @@ const SuperAdminPanel = () => {
                 {downloadLoading ? 'Downloading...' : 'Download All Data'}
               </Button>
               <h5 className="mb-3 pt-3 mt-3" style={{ color: "var(--ui-blue-dark)", borderTop: "1px dashed #ccc" }}>Specific Reports:</h5>
-              <Row className="g-3">
+              <Row className="g-3"> 
                 <Col xs={12} md={6}>
                   <label htmlFor="downloadState" className="form-label fw-bold mb-1">By State:</label>
                   <select id="downloadState" className="form-select mb-2" value={downloadState} onChange={(e) => setDownloadState(e.target.value)}>
@@ -296,7 +457,7 @@ const SuperAdminPanel = () => {
               <form onSubmit={handleAddOffice} className="d-flex flex-column flex-grow-1">
                 <input type="text" className="form-control mb-3" placeholder="Enter New Office/DCCB Name" value={newOfficeName} onChange={(e) => setNewOfficeName(e.target.value)} required />
                 {showAddStateInput ? (
-                  <div className="d-flex align-items-center mb-3 flex-wrap">
+                  <div className="d-flex align-items-center mb-3 flex-wrap"> 
                     <input
                       type="text"
                       className="form-control me-2 flex-grow-1 mb-2 mb-sm-0"
@@ -313,7 +474,7 @@ const SuperAdminPanel = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="d-flex align-items-center mb-3 flex-wrap">
+                  <div className="d-flex align-items-center mb-3 flex-wrap"> 
                     <select
                       className="form-select flex-grow-1 me-2 mb-2 mb-sm-0"
                       value={newOfficeState}
@@ -421,6 +582,7 @@ const SuperAdminPanel = () => {
 
   return (
     <div className="main-container" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Responsive Header with Hamburger Menu */}
       <header className="py-3 text-white shadow-sm admin-header d-flex align-items-center justify-content-between px-3 px-md-4">
         <Button
           variant="link"
@@ -435,9 +597,11 @@ const SuperAdminPanel = () => {
           <SuperAdminLogo /> AI-HRMS Super Admin Panel
         </h2>
         
+        {/* Spacer for alignment on mobile */}
         <div className="d-md-none" style={{ width: '24px' }} /> 
       </header>
       
+      {/* Offcanvas for mobile sidebar */}
       <Offcanvas show={isSidebarOpen} onHide={() => setIsSidebarOpen(false)} placement="start" className="mobile-sidebar-nav">
         <Offcanvas.Header closeButton closeVariant="white">
           <Offcanvas.Title className="text-white fw-bold">
@@ -451,6 +615,7 @@ const SuperAdminPanel = () => {
 
       <div className="d-flex flex-grow-1">
         
+        {/* Desktop Sidebar - hidden on mobile (d-none d-md-block) */}
         <nav
           className="p-3 shadow-lg sidebar-nav d-none d-md-block"
           style={{
@@ -479,10 +644,10 @@ const SuperAdminPanel = () => {
       <style jsx="true">{`
         :root {
           /* --- Blue Monochromatic Palette --- */
-          --ui-blue-primary: #2962FF; /* Primary blue for highlights/buttons */
-          --ui-blue-dark: #0D47A1;    /* Dark blue for header/footer */
-          --ui-blue-darker-tone: #083475; /* Darker tone for sidebar */
-          --ui-blue-light-bg: #f0f5ff; /* Light blue tint for background */
+          --ui-blue-primary: #2962FF; 
+          --ui-blue-dark: #0D47A1;    
+          --ui-blue-darker-tone: #083475; 
+          --ui-blue-light-bg: #f0f5ff; 
           
           /* --- Neutral Colors --- */
           --ui-white: #FFFFFF;
@@ -521,19 +686,18 @@ const SuperAdminPanel = () => {
         /* --- Sidebar Styles (Desktop & Offcanvas) --- */
         .sidebar-nav, .mobile-sidebar-nav {
           background-color: var(--ui-blue-darker-tone);
-          border-right: 1px solid rgba(255, 255, 255, 0.1); /* From user input */
+          border-right: 1px solid rgba(255, 255, 255, 0.1); 
           color: var(--ui-white);
+        }
+        
+        /* Targets the Offcanvas itself for dark theme */
+        .mobile-sidebar-nav.offcanvas { 
+            background-color: var(--ui-blue-darker-tone);
         }
 
         .sidebar-nav .nav-link, .mobile-sidebar-nav .nav-link {
           transition: background-color var(--transition-speed), color var(--transition-speed);
-          border-radius: 8px; /* From user input */
-        }
-
-        .active-sidebar-link {
-          background-color: var(--ui-blue-primary) !important;
-          border-radius: 8px;
-          font-weight: 600;
+          border-radius: 8px; 
         }
 
         .sidebar-nav .nav-link:hover, .mobile-sidebar-nav .nav-link:hover {
@@ -541,18 +705,24 @@ const SuperAdminPanel = () => {
           border-radius: 8px;
         }
         
+        .active-sidebar-link {
+          background-color: var(--ui-blue-primary) !important;
+          border-radius: 8px;
+          font-weight: 600;
+        }
+        
         /* --- Panel Card Styles --- */
         .panel-card {
-          border-radius: 12px; /* From user input */
-          border: none; /* From user input */
+          border-radius: 12px; 
+          border: none; 
           box-shadow: var(--box-shadow-light);
           overflow: hidden;
         }
 
         .panel-card .card-header {
-          border-top-left-radius: 12px; /* From user input */
-          border-top-right-radius: 12px; /* From user input */
-          border-bottom: none; /* From user input */
+          border-top-left-radius: 12px; 
+          border-top-right-radius: 12px; 
+          border-bottom: none; 
         }
 
         .welcome-header {
@@ -562,14 +732,14 @@ const SuperAdminPanel = () => {
           background-repeat: repeat !important;
           border-top-left-radius: 12px;
           border-top-right-radius: 12px;
-          padding: 1.5rem; /* From user input */
-          font-size: 1.5rem; /* From user input */
+          padding: 1.5rem; 
+          font-size: 1.5rem; 
         }
 
         /* --- Ad Container Styles --- */
         .ad-container {
-          background-color: rgba(255, 255, 255, 0.5); /* From user input */
-          border: 1px dashed #ccc !important; /* From user input */
+          background-color: rgba(255, 255, 255, 0.5); 
+          border: 1px dashed #ccc !important; 
           text-align: center;
           padding: 1rem;
         }
@@ -584,9 +754,9 @@ const SuperAdminPanel = () => {
           font-style: italic;
         }
         
-        /* --- Form & Touch Target Optimization (Crucial for Mobile) --- */
+        /* --- Form & Touch Target Optimization --- */
         .form-select, .form-control, .btn {
-            min-height: 48px; /* Standard accessible touch target size */
+            min-height: 48px; 
             padding: 0.75rem 1rem;
         }
         
@@ -601,7 +771,6 @@ const SuperAdminPanel = () => {
         @media (max-width: 767.98px) {
             .admin-header h2 {
                 font-size: 1.2rem !important;
-                margin-left: 10px;
             }
             .admin-header {
                 justify-content: start;
@@ -613,18 +782,12 @@ const SuperAdminPanel = () => {
                 margin-bottom: 1rem;
             }
             .ad-container {
-                display: none; /* Hide ads on mobile to save space */
+                display: none; 
             }
             /* Make inline forms stack cleanly on mobile */
             .card-body .flex-wrap > * {
                 flex-basis: 100% !important; 
                 margin: 0 0 0.5rem 0 !important;
-            }
-            /* Mobile Offcanvas styling from previous turn */
-            .mobile-sidebar-nav {
-                background-color: var(--ui-blue-darker-tone);
-                color: var(--ui-white);
-                max-width: 80%;
             }
         }
       `}</style>

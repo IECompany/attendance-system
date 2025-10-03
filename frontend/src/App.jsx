@@ -73,6 +73,7 @@ function App() {
 
             
             <Route path="*" element={<div>404 Not Found</div>} />
+            
           </Routes>
           
          

@@ -15,6 +15,7 @@ import {
   FaLinkedin,
   FaFacebook
 } from 'react-icons/fa';
+import Chatbot from '../components/Chatbot.jsx'; // IMPORT THE CHATBOT HERE
 
 // IMPORT YOUR VIDEOS HERE
 import video1 from '../assets/video1.mp4';
@@ -526,6 +527,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+      
+      {/* ADD THE CHATBOT HERE, JUST ABOVE THE FOOTER */}
+      <Chatbot />
 
       {/* Footer */}
       <footer className="footer">

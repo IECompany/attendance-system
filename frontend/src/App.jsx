@@ -1,5 +1,3 @@
-// frontend/src/App.jsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './authContext.jsx';
@@ -11,7 +9,7 @@ import AdminPanel from './pages/AdminPanel.jsx';
 import SuperAdminPanel from './pages/SuperAdminPanel.jsx';
 import CompanyRegister from './pages/CompanyRegister.jsx';
 import LandingPage from './pages/LandingPage.jsx';
-import Chatbot from './components/Chatbot.jsx'; // <-- 1. IMPORT THE CHATBOT
+// REMOVE: import Chatbot from './components/Chatbot.jsx';
 
 // PrivateRoute component (no changes)
 const PrivateRoute = ({ children, allowedRoles }) => {
@@ -70,13 +68,10 @@ function App() {
                 </PrivateRoute>
               }
             />
-
             
             <Route path="*" element={<div>404 Not Found</div>} />
+            
           </Routes>
-          
-         
-          <Chatbot />
         </div>
       </AuthProvider>
     </Router>

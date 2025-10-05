@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    FaComments, FaRobot, FaUser, FaPaperPlane, FaXmark, FaMinus, // <-- CORRECTED: FaTimes replaced with FaXmark
+    FaComments, FaRobot, FaUser, FaPaperPlane, FaXmark, FaMinus,
     FaUserClock, FaFileInvoiceDollar, FaUsers, FaHeadset 
 } from 'react-icons/fa6';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,14 +101,16 @@ const Chatbot = () => {
     };
 
     return (
-        <>
+        <div id="chatbot-container">
             <style jsx="true">{`
-                #chatbot-widget {
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    z-index: 1000;
-                    font-family: 'Inter', sans-serif;
+                #chatbot-container {
+                    /* New styling for the container */
+                    position: relative;
+                    width: 70px;
+                    height: 70px;
+                    margin-left: auto; /* Pushes the container to the right */
+                    margin-right: 24px; /* Space from the right edge of the page content */
+                    margin-bottom: 24px; /* Space from the footer */
                 }
 
                 .chat-bubble {
@@ -145,9 +147,10 @@ const Chatbot = () => {
                 }
                 
                 .chat-window {
-                    position: absolute;
+                    /* Changed from absolute to fixed to maintain its position on scroll */
+                    position: fixed;
                     bottom: 90px;
-                    right: 0;
+                    right: 24px;
                     width: 400px;
                     height: 600px;
                     background: white;
@@ -156,6 +159,7 @@ const Chatbot = () => {
                     display: flex;
                     flex-direction: column;
                     overflow: hidden;
+                    z-index: 1000;
                 }
                 
                 .chat-window.minimized {
@@ -245,13 +249,13 @@ const Chatbot = () => {
                 @media (max-width: 480px) {
                     .chat-window {
                         width: calc(100vw - 40px);
-                        right: -24px;
+                        right: 20px;
                         height: 70vh;
                         bottom: 80px;
                     }
                 }
             `}</style>
-
+            
             <motion.div 
                 id="chat-bubble" 
                 className="chat-bubble" 
@@ -289,7 +293,7 @@ const Chatbot = () => {
                                     </select>
                                 </div>
                                 <button onClick={() => setIsMinimized(true)} className="action-btn" title="Minimize"><FaMinus /></button>
-                                <button onClick={() => setIsOpen(false)} className="action-btn" title="Close"><FaXmark /></button> {/* <-- CORRECTED: FaTimes replaced with FaXmark */}
+                                <button onClick={() => setIsOpen(false)} className="action-btn" title="Close"><FaXmark /></button>
                             </div>
                         </div>
 
@@ -334,7 +338,7 @@ const Chatbot = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </>
+        </div>
     );
 };
 

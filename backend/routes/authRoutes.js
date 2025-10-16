@@ -1,17 +1,26 @@
-// Attandance System/backend/routes/authRoutes.js - UPDATED for multi-tenant login
+// Attendance System/backend/routes/authRoutes.js - UPDATED for multi-tenant login with reCAPTCHA
 
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 const User = require("../models/User");
 
-// JWT Secret from environment variable (CRITICAL: Ensure this is set)
+// JWT Secret from environment variable
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '1d';
 
+// reCAPTCHA Secret
+const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
+
 if (!JWT_SECRET) {
     console.error("JWT_SECRET is not defined in environment variables!");
+    process.exit(1);
+}
+
+if (!RECAPTCHA_SECRET) {
+    console.error("RECAPTCHA_SECRET is not defined in environment variables!");
     process.exit(1);
 }
 
@@ -22,37 +31,33 @@ const generateToken = (id, companyId) => {
     });
 };
 
-// POST /register - Registers a new user (within a company)
+// POST /register - Registers a new user
 router.post("/register", async (req, res) => {
-    const { name, email, password, companyId } = req.body;
+    const { name, email, password, companyId, recaptchaToken } = req.body;
 
     try {
-        if (!companyId) {
-            return res.status(400).json({ message: "Company ID is required for user registration." });
+        // --- Verify reCAPTCHA ---
+        if (!recaptchaToken) {
+            return res.status(400).json({ message: "reCAPTCHA token is missing" });
+        }
+        const recaptchaRes = await axios.post(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${RECAPTCHA_SECRET}&response=${recaptchaToken}`
+        );
+        if (!recaptchaRes.data.success) {
+            return res.status(400).json({ message: "reCAPTCHA verification failed" });
         }
 
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "Name, email, and password are required." });
-        }
+        if (!companyId) return res.status(400).json({ message: "Company ID is required for user registration." });
+        if (!name || !email || !password) return res.status(400).json({ message: "Name, email, and password are required." });
 
-        // 1. Check if user already exists within THIS company
+        // Check if user already exists in this company
         const existingUser = await User.findOne({ companyId, email });
-        if (existingUser) {
-            return res.status(400).json({ message: "User with this email already exists in this company." });
-        }
+        if (existingUser) return res.status(400).json({ message: "User with this email already exists in this company." });
 
-        // 2. Create new user
-        // Mongoose pre-save hook will hash the password
-        const newUser = new User({
-            companyId,
-            name,
-            email,
-            password, 
-            userType: 'user'
-        });
+        // Create new user
+        const newUser = new User({ companyId, name, email, password, userType: 'user' });
         await newUser.save();
 
-        // 3. Generate token and send response
         const token = generateToken(newUser._id, newUser.companyId);
         res.status(201).json({
             message: "User registered successfully.",
@@ -71,49 +76,50 @@ router.post("/register", async (req, res) => {
     }
 });
 
-// POST /login - Authenticates user without requiring companyId in request body
+// POST /login - Authenticates user
 router.post("/login", async (req, res) => {
-    const { loginId, password } = req.body;
+    const { loginId, password, recaptchaToken } = req.body;
 
     try {
-        if (!loginId || !password) {
-            return res.status(400).json({ message: "Please provide login ID and password" });
+        // --- Verify reCAPTCHA ---
+        if (!recaptchaToken) {
+            return res.status(400).json({ message: "reCAPTCHA token is missing" });
+        }
+        const recaptchaRes = await axios.post(
+            `https://www.google.com/recaptcha/api/siteverify?secret=${RECAPTCHA_SECRET}&response=${recaptchaToken}`
+        );
+        if (!recaptchaRes.data.success) {
+            return res.status(400).json({ message: "reCAPTCHA verification failed" });
         }
 
-        // 1. Find all users matching the loginId, regardless of their company.
+        if (!loginId || !password) return res.status(400).json({ message: "Please provide login ID and password" });
+
+        // Find all users matching loginId (multi-tenant)
         const users = await User.find({
             $or: [
                 { email: loginId },
                 { personalEmail: loginId },
                 { professionalEmail: loginId },
-                { employeeId: loginId }, 
+                { employeeId: loginId },
             ],
         });
 
-        // 2. If no user is found with that loginId
-        if (users.length === 0) {
-            return res.status(400).json({ message: "Invalid credentials." });
-        }
+        if (users.length === 0) return res.status(400).json({ message: "Invalid credentials." });
 
-        // 3. Iterate through the found users and check the password.
+        // Check passwords
         let authenticatedUser = null;
         for (const user of users) {
             const isMatch = await bcrypt.compare(password, user.password);
             if (isMatch) {
                 authenticatedUser = user;
-                break; // Exit the loop once a match is found
+                break;
             }
         }
-        
-        // 4. If no user was authenticated
-        if (!authenticatedUser) {
-            return res.status(400).json({ message: "Invalid credentials." });
-        }
-        
-        // 5. Generate JWT for the authenticated user
+
+        if (!authenticatedUser) return res.status(400).json({ message: "Invalid credentials." });
+
         const token = generateToken(authenticatedUser._id, authenticatedUser.companyId);
 
-        // 6. Send success response with user data
         res.status(200).json({
             message: "Login successful",
             token,

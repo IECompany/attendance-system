@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../authContext";
-import { FaUserPlus, FaSignInAlt } from 'react-icons/fa'; // Import icons
+import { FaUserPlus, FaSignInAlt } from 'react-icons/fa';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
@@ -14,128 +15,103 @@ const Dashboard = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [captchaValue, setCaptchaValue] = useState(null);
 
   const navigate = useNavigate();
   const { login, user: authUser } = useAuth();
+  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     setErrorMessage("");
   }, [isLogin]);
+
+  const onCaptchaChange = (value) => {
+    setCaptchaValue(value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
 
+    if (!captchaValue) {
+      setErrorMessage("Please complete the reCAPTCHA.");
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
-        // CORRECTED: Await the fetch call and store the response in a variable.
         const res = await fetch(`${API_BASE_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ loginId, password }),
+          body: JSON.stringify({ loginId, password, recaptchaToken: captchaValue }),
         });
-        
-        // This is the correct way to parse and handle the response
+
         let data;
         try {
           data = await res.json();
-        } catch (parseError) {
-          // If the server returns a non-JSON response (e.g., an empty body), this will catch it.
-          console.error("Failed to parse response JSON:", parseError);
-          setErrorMessage("Failed to process server response. Please check server logs.");
+        } catch {
+          setErrorMessage("Failed to process server response.");
           setLoading(false);
           return;
         }
 
-        console.log('Login API Response Status:', res.status);
-        console.log('Login API Response Data:', data);
-        
-        // Handle server-side errors
-        if (!res.ok) {
-          setErrorMessage(data.message || "Login failed due to a server error.");
+        if (!res.ok || !data?.user) {
+          setErrorMessage(data.message || "Login failed.");
           setLoading(false);
           return;
         }
 
-        // Check for user data within the parsed response
-        if (!data || !data.user) {
-          console.log('User data not found in response.');
-          setErrorMessage(data.message || "Login failed. User data is missing from the response.");
-          setLoading(false);
-          return;
-        }
+        login(data.user, data.token);
 
-        console.log('User Type from Response:', data.user.userType);
-        console.log('Company ID from Response:', data.user.companyId);
-        console.log('User Name from Response:', data.user.name);
-        console.log('User ID from Response:', data.user.userId);
-        
-        const { token, user } = data;
-        
-        console.log('Calling useAuth login with user:', user);
-        console.log('Calling useAuth login with token:', token ? 'present' : 'missing');
-        login(user, token);
-        
-        console.log('Attempting redirection based on userType:', user.userType);
-        if (user.userType === "superadmin") {
-          navigate("/super-admin-panel");
-        } else if (user.userType === "admin") {
-          navigate("/admin-panel");
-        } else {
-          navigate("/user-dashboard");
-        }
+        if (data.user.userType === "superadmin") navigate("/super-admin-panel");
+        else if (data.user.userType === "admin") navigate("/admin-panel");
+        else navigate("/user-dashboard");
 
-      } else { // Registration
+      } else {
         if (password !== confirmPassword) {
           setErrorMessage("Passwords do not match!");
           setLoading(false);
           return;
         }
-        
-        const tempCompanyId = "60c72b2f9b1e8e001c8e8e8e"; // Placeholder - REPLACE with actual logic
-        
-        // CORRECTED: Await the fetch and store the response.
+
+        const tempCompanyId = "60c72b2f9b1e8e001c8e8e8e";
         const res = await fetch(`${API_BASE_URL}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email: loginId, password, companyId: tempCompanyId }),
+          body: JSON.stringify({ name, email: loginId, password, companyId: tempCompanyId, recaptchaToken: captchaValue }),
         });
-        
+
         const data = await res.json();
-        
+
         if (!res.ok) {
           setErrorMessage(data.message || "Registration failed");
           setLoading(false);
           return;
         }
-        
-        const { token, user } = data;
-        
-        login(user, token);
-        
+
+        login(data.user, data.token);
+
         setErrorMessage("Registered and logged in successfully!");
         setTimeout(() => {
-          if (user.userType === "superadmin") {
-            navigate("/super-admin-panel");
-          } else if (user.userType === "admin") {
-            navigate("/admin-panel");
-          } else {
-            navigate("/user-dashboard");
-          }
+          if (data.user.userType === "superadmin") navigate("/super-admin-panel");
+          else if (data.user.userType === "admin") navigate("/admin-panel");
+          else navigate("/user-dashboard");
         }, 1000);
       }
     } catch (err) {
-      console.error("API error:", err);
-      setErrorMessage("Something went wrong. Please check your network or try again.");
+      console.error(err);
+      setErrorMessage("Something went wrong. Please try again.");
     } finally {
+      if (recaptchaRef.current) recaptchaRef.current.reset();
       setLoading(false);
     }
   };
 
   return (
     <>
-      <style jsx="true">{`
+            <style jsx="true">{`
         :root {
           /* --- Blue Monochromatic Palette --- */
           --ui-blue-primary: #2962FF; /* Main vibrant blue */
@@ -275,30 +251,24 @@ const Dashboard = () => {
       `}</style>
 
       <Navbar />
-
       <div className="login-hero">
         <div className="container">
           <h2>Welcome Back!</h2>
-          <p>
-            Your journey to simplified workforce management begins here.
-          </p>
+          <p>Your journey to simplified workforce management begins here.</p>
         </div>
       </div>
 
       <div className="container auth-container">
         <div className="row justify-content-center">
           <div className="col-lg-5 col-md-7">
-            {/* Main authentication card */}
             <div className="auth-card">
               <h4 className="text-center form-title">
                 {isLogin ? <FaSignInAlt /> : <FaUserPlus />}
                 {isLogin ? "Login to Your Account" : "Create a New Account"}
               </h4>
-              
-              {/* This is the new ad space div, moved to a more visible location */}
+
               <div className="ad-space">
                 <p className="text-muted small mb-0">Advertisement</p>
-                {/* Your actual ad code (e.g., Google AdSense) goes here */}
                 <div style={{ height: '100px', backgroundColor: '#e9ecef', marginTop: '10px', borderRadius: '8px' }}>
                   <p style={{ paddingTop: '40px' }}>[Your Ad Content]</p>
                 </div>
@@ -312,7 +282,6 @@ const Dashboard = () => {
                       type="text"
                       id="name"
                       className="form-control"
-                      placeholder="Enter Your Name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
@@ -326,7 +295,6 @@ const Dashboard = () => {
                     type="text"
                     id="loginId"
                     className="form-control"
-                    placeholder="Enter your Email or Company ID"
                     value={loginId}
                     onChange={(e) => setLoginId(e.target.value)}
                     required
@@ -339,7 +307,6 @@ const Dashboard = () => {
                     type="password"
                     id="password"
                     className="form-control"
-                    placeholder={isLogin ? "Enter your password" : "Create a password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -353,13 +320,21 @@ const Dashboard = () => {
                       type="password"
                       id="confirmPassword"
                       className="form-control"
-                      placeholder="Confirm your password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                     />
                   </div>
                 )}
+
+                {/* reCAPTCHA */}
+                <div className="mb-3">
+                  <ReCAPTCHA
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                    onChange={onCaptchaChange}
+                    ref={recaptchaRef}
+                  />
+                </div>
 
                 {errorMessage && (
                   <div className={`alert ${errorMessage.includes("successfully") ? "alert-success" : "alert-danger"} mt-3`}>
@@ -368,16 +343,10 @@ const Dashboard = () => {
                 )}
 
                 <button type="submit" className="btn btn-submit w-100 mt-3" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      {isLogin ? "Logging In..." : "Registering..."}
-                    </>
-                  ) : (
-                    isLogin ? "Login" : "Register"
-                  )}
+                  {loading ? (isLogin ? "Logging In..." : "Registering...") : (isLogin ? "Login" : "Register")}
                 </button>
               </form>
+
               <div className="text-center mt-4">
                 <button className="btn btn-link btn-toggle" onClick={() => setIsLogin(!isLogin)}>
                   {isLogin ? "Don't have an account? Register here" : "Already have an account? Login here"}

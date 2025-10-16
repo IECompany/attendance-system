@@ -33,7 +33,7 @@
     "react-to-print": "^3.1.1",
     "react-toastify": "^11.0.5",
     "xlsx": "^0.18.5",
-    "react-google-recaptcha": "^3.3.0"
+    "react-google-recaptcha": "^3.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
